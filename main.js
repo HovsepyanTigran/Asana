@@ -5,13 +5,12 @@ class Trello {
         this.render();
     }
 
-    drawColumn(title) 
-    {   
+    drawColumn(title, id) 
+    {           
         this.columnContent = document.createElement("div");
         this.columnContent.classList.add("column-content");
         this.addColumnButton.append(this.columnContent);
-        this.columnContent.id = this.id + '';
-        // this.ClmnCntsArr.push(this.columnContent);
+        this.columnContent.id = id;
             
         let columnTitleContent = document.createElement("div");
         columnTitleContent.classList.add("column-title-content");
@@ -21,256 +20,147 @@ class Trello {
         columnTitle.classList.add("column-title");
         columnTitleContent.append(columnTitle);
         columnTitle.value = title;
-
+        columnTitle.id = id;
+        
+        columnTitle.addEventListener("keypress", evt => {
+            evt.stopPropagation();
+            if(evt.keyCode === 13) {
+                columnTitle.value = columnTitle.value;
+                columnTitleContent.innerHTML = "";
+                columnTitleContent.append(columnTitle)
+                columnTitleContent.append(this.deleteColumnButton);
+                this.data.find(elem => elem.id === columnTitle.id).title = columnTitle.value
+                this.setLocalData();
+            }
+        })
+        
         this.deleteColumnButton = document.createElement("button");
         this.deleteColumnButton.classList.add("column-delete-button");
         columnTitleContent.append(this.deleteColumnButton);
-        this.deleteColumnButton.id = this.id + ''
-        
-        this.clmnDelBtnArr = [];
+        this.deleteColumnButton.id = id;
+
 
         this.taskContent = document.createElement("div");
         this.taskContent.classList.add("column__task-content");
         this.columnContent.append(this.taskContent);
-        this.taskContent.id = this.id + '';
-        // this.taskClmnCntsArr.push(this.taskContent);
-        
+        this.taskContent.id = id
 
         this.container.querySelectorAll(".column-delete-button").forEach(item => {
-            this.clmnDelBtnArr.push(item)
             
             item.onclick = (evt) => {
-
-            evt.stopPropagation()
-            let ind = this.clmnDelBtnArr.indexOf(item)
-            this.data.splice(ind,1)
-            this.setLocalData()
-
-            this.containerBoard.innerHTML = "";
-            console.log(this.taskClmnCntsArr[ind]);
-            this.data.forEach(elem => {
-                this.addColumnButton = document.createElement("div");
-                this.addColumnButton.classList.add("column");
-                this.containerBoard.append(this.addColumnButton);
-                this.drawColumn(elem.title);
+                evt.stopPropagation();
                 
-                elem.tasks.forEach((task) => {
-                    this.drawTask(task.title,this.taskContent);
+                let ind = this.data.findIndex(elem => elem.id === item.id)
+
+                this.data.splice(ind,1);
+                this.containerBoard.innerHTML = "";
+                this.setLocalData();
+
+                this.data.forEach(elem => {
+                    this.addColumnButton = document.createElement("div");
+                    this.addColumnButton.classList.add("column");
+                    this.containerBoard.append(this.addColumnButton);
+                    this.addColumnButton.id = elem.id
+                    
+                    this.drawColumn(elem.title, elem.id);
+                    
+                    this.drawtaskDescriptionContentLogo(elem)
+
+                    this.drawTaskContent(this.taskContent, elem.id);
                 })
-                this.drawTaskContent();
                 
-            //     // this.taskClmnCntsArr.push(this.taskContent)
-            //     // console.log(item);
-            //     // let cnt = this.taskClmnCntsArr.find(item1 => item1.id === item.id)
-            //     // console.log(cnt);
-            //     // item.tasks.forEach((task) => {
-            //     //     this.drawTask(task.title, cnt)
-            //     // })
-
-
-            })
-            
-            this.drawContainerBoard();
-            
-            // let a = this.taskClmnCntsArr.find(item1 => item1.id === item.id)
-            // console.log(a);
-            // // a.append(this.taskContent)
-            // let cnt = this.taskClmnCntsArr.find(item1 => item1.id === item.id)
-               
-            
-            // this.containerBoardObj.forEach(elem => {
-            //     this.addColumnButton = document.createElement("div");
-            //     this.addColumnButton.classList.add("column");
-            //     this.containerBoard.append(this.addColumnButton);
-            //     this.drawColumn(elem.title)
-            // //     // if(elem.tasks != []) {
-            // //     //     elem.tasks.forEach((item1) => {
-            // //     //             this.drawTask(item1, this.taskContent)
-            // //     //             console.log(this.taskClmnCntsArr);
-            // //     //         })
-            // //     //     }
-
-            // });
-            // this.drawTaskContent() 
-
-            // this.drawContainerBoard()
+                this.drawContainerBoard();
             }
-            console.log(this.data);
             
-        })
+        })     
         
-                
-
     }
 
     
-    drawTaskContent() 
+    drawTaskContent(cnt, id) 
     { 
         this.taskClmnCntsArr = [];
-        this.addTaskButtonArr = [];
         this.addTaskButton = document.createElement("button");
         this.addTaskButton.classList.add("button-add-task");
         this.addTaskButton.innerHTML = "+ add Task";
-        this.taskContent.append(this.addTaskButton);
-        this.addTaskButton.id = this.id + '';
+        cnt.append(this.addTaskButton);
+        this.addTaskButton.id = id;
+
         this.container.querySelectorAll(".column__task-content").forEach(taskCnt => {
             this.taskClmnCntsArr.push(taskCnt)
 
-        this.container.querySelectorAll(".button-add-task").forEach((item) => { 
-            this.addTaskButtonArr.push(item)
-            item.onclick = (evt) => {
-                evt.stopPropagation()
-                item.remove();
-                let cnt = this.addTaskButtonArr.indexOf(item);
-                console.log(cnt);
-                let titleTextArea = document.createElement("textarea");
-                titleTextArea.classList.add("task-content__textarea");
-                this.taskClmnCntsArr[cnt].append(titleTextArea);
-                titleTextArea.placeholder = "Enter task title"
+            this.container.querySelectorAll(".button-add-task").forEach((item) => { 
+                item.onclick = (evt) => {
+                    evt.stopPropagation();
+                    item.remove();
+                    let cnt = this.taskClmnCntsArr.findIndex(elem => elem.id === item.id)
 
-                titleTextArea.onclick = (evt) => {
-                    evt.stopPropagation()
-                }
-                let taskTitleControls = document.createElement("div");
-                        taskTitleControls.classList.add("column__title-controls");
-                        this.taskClmnCntsArr[cnt].append(taskTitleControls);
-        
-                        let addTaskTitle = document.createElement("button");
-                        addTaskTitle.classList.add("button-add-column__title");
-                        addTaskTitle.innerHTML = "Add column";
-                        taskTitleControls.append(addTaskTitle);
-        
-                        let closeTaskButton = document.createElement("button");
-                        closeTaskButton.classList.add("column-close-button");
-                        closeTaskButton.innerHTML = "x";
-                        taskTitleControls.append(closeTaskButton);
-                        addTaskTitle.onclick = (evt) => {
-                            if(titleTextArea.value != "") 
+                    let titleTextArea = document.createElement("textarea");
+                    titleTextArea.classList.add("task-content__textarea");
+                    this.taskClmnCntsArr[cnt].append(titleTextArea);
+                    titleTextArea.placeholder = "Enter task title";
+
+                    titleTextArea.onclick = (evt) => {
+                        evt.stopPropagation();
+                    }
+                    let taskTitleControls = document.createElement("div");
+                            taskTitleControls.classList.add("column__title-controls");
+                            this.taskClmnCntsArr[cnt].append(taskTitleControls);
+            
+                            let addTaskTitle = document.createElement("button");
+                            addTaskTitle.classList.add("button-add-column__title");
+                            addTaskTitle.innerHTML = "Add task";
+                            taskTitleControls.append(addTaskTitle);
+                            addTaskTitle
+            
+                            let closeTaskButton = document.createElement("button");
+                            closeTaskButton.classList.add("column-close-button");
+                            closeTaskButton.innerHTML = "x";
+                            taskTitleControls.append(closeTaskButton);
+                            addTaskTitle.onclick = (evt) => 
+                            {
+                                let taskId = 'id_' + Math.random(1, 1000);
+                                if(titleTextArea.value != "") 
+                                {   evt.stopPropagation();
+                                    this.taskClmnCntsArr[cnt].removeChild(titleTextArea);
+                                    this.taskClmnCntsArr[cnt].removeChild(taskTitleControls);
+                                    this.data[cnt].tasks.push({title:titleTextArea.value, description:'', id: taskId});
+                                    
+                                    this.setLocalData();
+                                    this.drawTask(titleTextArea.value, this.taskClmnCntsArr[cnt], this.taskClmnCntsArr[cnt].id);
+
+                                    this.taskClmnCntsArr[cnt].append(item);
+                                }
+                            }
+
+                            closeTaskButton.onclick = (evt) => 
                             {   evt.stopPropagation()
                                 this.taskClmnCntsArr[cnt].removeChild(titleTextArea);
-                                this.taskClmnCntsArr[cnt].removeChild(taskTitleControls)
-                                this.data[cnt].tasks.push({title:titleTextArea.value, description:''})
-                                // console.log(this.containerBoardObj);
-                                this.setLocalData()
-                               
-                                this.drawTask(titleTextArea.value, this.taskClmnCntsArr[cnt])
-                                 
-                                // let cnt = this.taskClmnCntsArr.find(item => item.id === elem.id)
+                                this.taskClmnCntsArr[cnt].removeChild(taskTitleControls);
 
-                                // this.drawTask(titleTextArea.value, this.taskClmnCntsArr[ind])
-                                this.taskClmnCntsArr[cnt].append(item)
+                                this.taskClmnCntsArr[cnt].append(item);
 
-                            }}
-                        // this.data.forEach((elem) => {
-                        //     if(elem.id === item.id) {
-                        //         elem.tasks.forEach((task) => {
-                        //             this.drawTask(task.title,this.taskClmnCntsArr[cnt]);
-                        //         })
-                        //     }
-                        // })
+                            }
                         
-                // this.drawTaskContent();
-                // this.taskClmnCntsArr.forEach((elem) => {
-                //     if(elem.id === item.id) {
-                //         let ind = this.taskClmnCntsArr.indexOf(elem)
-                //         console.log(ind);
-                //         console.log(this.taskClmnCntsArr);
-                //         console.log(this.taskClmnCntsArr[ind]);
-                //         this.taskClmnCntsArr[ind].removeChild(item);
-                        
-                        
-
-                //         let titleTextArea = document.createElement("textarea");
-                //         titleTextArea.classList.add("task-content__textarea");
-                //         elem.append(titleTextArea);
-                //         titleTextArea.placeholder = "Enter task title"
-                //         titleTextArea.onclick = (evt) => {
-                //             evt.stopPropagation()
-                //         }
-                //         console.log(this.ClmnCntsArr);
-        
-                //         // this.buttonClicked = false
-        
-                //         let taskTitleControls = document.createElement("div");
-                //         taskTitleControls.classList.add("column__title-controls");
-                //         elem.append(taskTitleControls);
-        
-                //         let addTaskTitle = document.createElement("button");
-                //         addTaskTitle.classList.add("button-add-column__title");
-                //         addTaskTitle.innerHTML = "Add column";
-                //         taskTitleControls.append(addTaskTitle);
-        
-                //         let closeTaskButton = document.createElement("button");
-                //         closeTaskButton.classList.add("column-close-button");
-                //         closeTaskButton.innerHTML = "x";
-                //         taskTitleControls.append(closeTaskButton);
-
-                        
-
-                //         addTaskTitle.onclick = (evt) => {
-                //             if(titleTextArea.value != "") 
-                //             {   evt.stopPropagation()
-                //                 elem.removeChild(titleTextArea);
-                //                 elem.removeChild(taskTitleControls)
-                //                 this.data[ind].tasks.push({title:titleTextArea.value, description:''})
-                //                 // console.log(this.containerBoardObj);
-                //                 this.setLocalData()
-                //                 // let taskContentTitle = document.createElement("div");
-                //                 // taskContentTitle.classList.add("task-content-title");
-                //                 // taskContentTitle.draggable = "true"
-                //                 // taskContentTitle.id = "item"
-                //                 // elem.append(taskContentTitle);
-                                
-                                
-                //                 // let taskTitle = document.createElement("div")
-                //                 // taskTitle.classList.add("task-title");
-                //                 // taskContentTitle.append(taskTitle);
-                                
-
-                //                 // let title = document.createElement("p");
-                //                 // title.classList.add("title");
-                //                 // taskTitle.append(title);
-                //                 // title.innerHTML = titleTextArea.value;
-                //                 // let deleteTaskButton = document.createElement("button");
-                //                 // deleteTaskButton.classList.add("delete-task-button");
-                //                 // taskTitle.appendChild(deleteTaskButton);
-                                
-        
-                //                 // let taskDescriptionContentLogo = document.createElement("img");
-                //                 // taskDescriptionContentLogo.classList.add("task-description-content-logo");
-                //                 // taskContentTitle.append(taskDescriptionContentLogo);
-                                 
-                //                 let cnt = this.taskClmnCntsArr.find(item => item.id === elem.id)
-
-                //                 this.drawTask(titleTextArea.value, this.taskClmnCntsArr[ind])
-                //                 elem.append(item)
-
-                //             }}
-                                
-                //     }
-                // })
-            }
+                }
             })
         })
         
         
         
-        
     }
 
-    drawTask(taskDesctitle, content) {
-        
-        this.delTaskBtnArr = [];
+    drawTask(taskDesctitle, content, id) {
 
+        this.delTaskBtnArr = [];
         let taskContentTitle = document.createElement("div");
         taskContentTitle.classList.add("task-content-title");
-        taskContentTitle.draggable = "true"
-        // this.container.querySelectorAll(".column__task-content").forEach((item) => {
-            content.append(taskContentTitle)
-        // });
-        taskContentTitle.id = this.id + '';    
+        taskContentTitle.draggable = "true";
+        taskContentTitle.id = id; 
+        content.append(taskContentTitle);
+           
                     
-        let taskTitle = document.createElement("div")
+        let taskTitle = document.createElement("div");
         taskTitle.classList.add("task-title");
         taskContentTitle.append(taskTitle);
                     
@@ -278,82 +168,58 @@ class Trello {
         let title = document.createElement("p");
         title.classList.add("title");
         taskTitle.append(title);
-                    
         title.innerHTML = taskDesctitle;
-                    
+        title
+         
         let deleteTaskButton = document.createElement("button");
         deleteTaskButton.classList.add("delete-task-button");
         taskTitle.appendChild(deleteTaskButton);
-        deleteTaskButton.id = this.id;
-        // deleteTaskButton.text = taskDesctitle;
-
+        deleteTaskButton.id = id;
+        
+        this.taskDescriptionContentLogo = document.createElement("img");
+        this.taskDescriptionContentLogo.classList.add("task-description-content-logo");
+        taskContentTitle.append(this.taskDescriptionContentLogo);
+        
         this.container.querySelectorAll(".delete-task-button").forEach(item => {
             this.delTaskBtnArr.push(item);
-            item.onclick = (evt) => {
-                evt.stopPropagation();
-                console.log(this.delTaskBtnArr);
-                console.log(item);
-            }
-        })
-    //     this.delTaskBtnArr.push(deleteTaskButton)
-    //     this.delTaskBtnArr.forEach(item => {
-    //     item.onclick = (evt) => {
-    //         evt.stopPropagation()
-    //         let ind = this.delTaskBtnArr.indexOf(item)
-    //         // console.log(this.container.querySelectorAll(".delete-task-button"));
-    //         // this.container.querySelectorAll(".delete-task-button").forEach(item => {
-    //             // this.containerBoardObj.forEach(elem => {
-    //                 // elem.tasks.forEach((item1) => {
-    //                     // if(deleteTaskButton.id === elem.id) {
-    //                     //     console.log(elem);
-    //                     // }
-    //                 // })
-    //                 console.log(deleteTaskButton.text);
-    //                 // let ind = this.data.find((elem) => elem.id === deleteTaskButton.id)
-    //                 // let ind1 = ind.tasks.findIndex((elem) => elem === deleteTaskButton.text)
-    //                 ind.tasks.splice(ind,1)
-    //                 console.log(ind);
-    //                 // taskContentTitle.innerHTML = ""
-    //                 this.setLocalData()
+                item.onclick = (evt) => {
+                    evt.stopPropagation();
                     
-    //                 ind.tasks.forEach(item => {
-    //                     this.drawTask(item.title)
-    //                 })
+                    let delTaskBtnArrFiltr = this.delTaskBtnArr.filter(elem => elem.id === item.id);
+                    let ind = this.taskClmnCntsArr.findIndex(elem => elem.id === item.id);
+                    this.data[ind].tasks.splice(delTaskBtnArrFiltr.indexOf(item),1);
                     
-    //                 // this.drawTaskContent()
-    //                 // ind.tasks.forEach(item => {
-    //                 //     // if(deleteTaskButton.text = item) {
-    //                 //     //     ind.
-    //                 //     // }
-    //                 //     console.log(item);
-    //                 // })
-    //                 // console.log(ind.tasks);
-    //             // })
+                    this.setLocalData();
+                    this.containerBoard.innerHTML = "";
 
-    //         // })
-    //         // let ind = this.containerBoardObj.find((elem) => elem.id === deleteTaskButton.id);
-    //         // console.log(ind);
-    //         // this.containerBoardObj.splice(ind,1)
-    //         this.drawTaskContent()
-    //     }
-    // })
-        let taskDescriptionContentLogo = document.createElement("img");
-        taskDescriptionContentLogo.classList.add("task-description-content-logo");
-        taskContentTitle.append(taskDescriptionContentLogo);
+                    this.drawContent(this.data);
 
+                    this.drawContainerBoard();
+                }
+        });
+        
+        this.drawModalWindow();
     }
     
     drawModalWindow() {
+        let taskTitleArr = [];
         let modalDescriptionContent;
         let modalDescriptionTextAreaContent;
         let modalDescription;
         let modalDescriptionTextArea;
-        let modalDescriptionText = ""
+
         this.container.querySelectorAll(".task-content-title").forEach((elem) => {
+            taskTitleArr.push(elem)
             elem.onclick = (evt) => {
                 evt.stopPropagation()
+                let taskTitleArrFiltr = taskTitleArr.filter(item => item.id === elem.id); 
+                
+                let ind1 = this.taskClmnCntsArr.findIndex(item => item.id === elem.id);
+                let ind = taskTitleArrFiltr.indexOf(elem);
+
                 let taskContentOverlay = document.querySelector(".task-content__overlay-window");
                 let taskContentModal = document.querySelector(".task-content__modal");
+                
                 taskContentOverlay.classList.add("task-content__overlay-window_display-block");
                 
                 let modalHeader = document.createElement("div");
@@ -363,36 +229,216 @@ class Trello {
                 let taskContentModalTitle = document.createElement('textarea');
                 taskContentModalTitle.classList.add("modal-title");
                 modalHeader.append(taskContentModalTitle);
-                JSON.parse(this.localStorageObj).forEach(item => {
-                    item.tasks.forEach(item1 => {
-                        if(elem.id === item.id) {
-                        taskContentModalTitle.value = item1
-                        }
-                    })
+                taskContentModalTitle.value = this.data[ind1].tasks[ind].title;
+
+                taskContentModalTitle.addEventListener("keypress", evt => {
+                    if(evt.keyCode === 13) {
+                        taskContentModalTitle.value = taskContentModalTitle.value;
+                        modalHeader.innerHTML = "";
+                        modalHeader.append(taskContentModalTitle)
+                        modalHeader.append(modalCloseButton);
+                        this.data[ind1].tasks[ind].title = taskContentModalTitle.value
+                        this.setLocalData();
+                    }
                 })
+
+                let modalCloseButton = document.createElement("button");
+                modalCloseButton.classList.add("modal-close-button");
+                modalCloseButton.innerHTML = "x";
+                modalHeader.append(modalCloseButton);
+
+                modalDescriptionContent = document.createElement("div");
+                modalDescriptionContent.classList.add("modal-description-content");
+                taskContentModal.append(modalDescriptionContent);
+
+                let modalDescriptionTitle = document.createElement("p");
+                modalDescriptionTitle.classList.add("description-title");
+                modalDescriptionTitle.innerHTML = "Description";
+                modalDescriptionContent.append(modalDescriptionTitle);
+
+                modalDescriptionTextAreaContent = document.createElement("div");
+                modalDescriptionTextAreaContent.classList.add("modal-description-text-area-content");
+                modalDescriptionContent.append(modalDescriptionTextAreaContent);
+                
+                let modalDescriptionControls = document.createElement("div");
+                modalDescriptionControls.classList.add("modal-description__controls");
+
+                let addDescriptionButton = document.createElement("button")
+                addDescriptionButton.classList.add("button-add-description");
+                addDescriptionButton.innerHTML = "Add description";         
+
+                let closeDescriptionButton = document.createElement("button");
+                closeDescriptionButton.classList.add("modal-description-close-button");
+                closeDescriptionButton.innerHTML = "x";
+                modalDescription = document.createElement("p");
+                modalDescription.classList.add("modal-description");
+                
+                modalDescriptionTextArea = document.createElement("textarea");
+                modalDescriptionTextArea.classList.add("modal-description-text-area");
+
+                
+                if(this.data[ind1].tasks[ind].description === "") {
+                    modalDescriptionTextArea.placeholder = "task description . . .";
+                    modalDescriptionTextAreaContent.append(modalDescriptionTextArea);
+                    
+                    modalDescriptionTextArea.placeholder = "task description . . .";
+                    modalDescriptionTextArea.value = "";
+                    modalDescriptionTextAreaContent.append(modalDescriptionControls);
+                    modalDescriptionControls.append(addDescriptionButton);
+                    modalDescriptionControls.append(closeDescriptionButton);
+                    
+                    modalDescriptionContent.append(modalDescription);
+                    
+                    addDescriptionButton.onclick = () => {
+                        if(modalDescriptionTextArea.value != "") {
+                            modalDescriptionContent.removeChild(modalDescriptionTextAreaContent);
+                            modalDescriptionContent.append(modalDescription)
+                            modalDescription.textContent = modalDescriptionTextArea.value;
+                            this.data[ind1].tasks[ind].description = modalDescription.textContent;
+                            this.setLocalData();
+                        }
+                        if(modalDescriptionTextArea.value === "") {
+                            modalDescriptionContent.removeChild(modalDescriptionTextAreaContent);
+                            modalDescriptionContent.append(modalDescription)
+                            modalDescription.textContent = "task description . . .";
+                            this.data[ind1].tasks[ind].description = "";
+                            this.setLocalData();
+                        }
+                    
+                    }    
+                    modalDescription.onclick = () => {
+                        modalDescriptionContent.removeChild(modalDescription);
+                        modalDescriptionContent.append(modalDescriptionTextAreaContent);
+                        modalDescriptionTextArea.value = this.data[ind1].tasks[ind].description;
+                        modalDescriptionTextArea.select();
+                        this.setLocalData();
+                    }   
+                    closeDescriptionButton.onclick = () => {
+                        if(modalDescriptionTextArea.value === "" && this.data[ind1].tasks[ind].description != "") {
+                            modalDescriptionTextAreaContent.remove()
+                            modalDescriptionContent.append(modalDescription);
+                            modalDescriptionTextArea.value = this.data[ind1].tasks[ind].description;
+                            this.setLocalData();
+                        }
+                        if(modalDescriptionTextArea.value === "" && this.data[ind1].tasks[ind].description === "") {
+                            modalDescriptionTextAreaContent.remove()
+                            modalDescriptionContent.append(modalDescription);
+                            modalDescription.textContent = "task description . . .";
+                            this.setLocalData();
+                        }
+                        if(modalDescriptionTextArea.value != "" && this.data[ind1].tasks[ind].description != "") {
+                            modalDescriptionTextAreaContent.remove();
+                            modalDescriptionContent.append(modalDescription);
+                            modalDescription.textContent = modalDescription.textContent;
+                            modalDescriptionTextArea.value = modalDescription.textContent;
+                            this.setLocalData();
+                        }
+                        if(modalDescriptionTextArea.value != "" && this.data[ind1].tasks[ind].description === "") {
+                            modalDescriptionTextAreaContent.remove();
+                            modalDescriptionContent.append(modalDescription);
+                            modalDescription.textContent = "task description . . .";
+                            this.setLocalData();
+                        }
+
+                    } 
+
+                }
+                
+                if(this.data[ind1].tasks[ind].description != "") {
+                    modalDescriptionContent.append(modalDescription)
+                    modalDescription.onclick = () => { 
+                        modalDescriptionContent.removeChild(modalDescription);
+                        modalDescriptionContent.append(modalDescriptionTextAreaContent);
+                        modalDescriptionTextAreaContent.append(modalDescriptionTextArea);
+                        modalDescriptionTextAreaContent.append(modalDescriptionControls);
+                        modalDescriptionControls.append(addDescriptionButton);
+                        modalDescriptionControls.append(closeDescriptionButton);
+                        modalDescriptionTextArea.placeholder = "task description . . .";
+
+                        modalDescriptionTextArea.value = this.data[ind1].tasks[ind].description;
+                        modalDescriptionTextArea.select();
+                        this.setLocalData();
+                    }
+                    modalDescription.textContent = this.data[ind1].tasks[ind].description
+                    addDescriptionButton.onclick = () => {
+                        if(modalDescriptionTextArea.value === "") {
+                            modalDescriptionContent.removeChild(modalDescriptionTextAreaContent);
+                            modalDescriptionContent.append(modalDescription)
+                            
+                            modalDescription.textContent = "task description . . .";
+                            this.data[ind1].tasks[ind].description = "";
+                            this.setLocalData();
+                        } else {
+                            modalDescriptionContent.removeChild(modalDescriptionTextAreaContent)
+                            modalDescriptionContent.append(modalDescription);
+                            modalDescription.textContent = modalDescriptionTextArea.value;
+                            this.data[ind1].tasks[ind].description = modalDescription.textContent
+                            this.setLocalData();
+                        }
+                    }
+                    closeDescriptionButton.onclick = () => {
+                        if(modalDescriptionTextArea.value === "" && this.data[ind1].tasks[ind].description != "") {
+                            modalDescriptionTextAreaContent.remove()
+                            modalDescriptionContent.append(modalDescription);
+                            modalDescriptionTextArea.value = this.data[ind1].tasks[ind].description;
+                            this.setLocalData();
+
+                        }
+                        if(modalDescriptionTextArea.value === "" && this.data[ind1].tasks[ind].description === "") {
+                            modalDescriptionTextAreaContent.remove()
+                            modalDescriptionContent.append(modalDescription);
+                            modalDescription.textContent = "task description . . .";
+                            this.setLocalData();
+                        }
+                        if(modalDescriptionTextArea.value != "" && this.data[ind1].tasks[ind].description != "") {
+                            modalDescriptionContent.removeChild(modalDescriptionTextAreaContent);
+                            modalDescriptionContent.append(modalDescription);
+                            modalDescription.textContent = modalDescription.textContent;
+                            modalDescriptionTextArea.value = modalDescription.textContent;
+                            this.setLocalData();
+                        }
+                        if(modalDescriptionTextArea.value != "" && this.data[ind1].tasks[ind].description === "") {
+                            modalDescriptionTextAreaContent.remove();
+                            modalDescriptionContent.append(modalDescription);
+                            modalDescription.textContent = "task description . . .";
+                            this.setLocalData();
+                        }
+                    }
+                }
+                
+                modalCloseButton.onclick = () => {
+                    taskContentOverlay.classList.add("task-content__overlay-window");
+                    taskContentOverlay.classList.remove("task-content__overlay-window_display-block");
+                    taskContentModal.removeChild(modalHeader);
+                    taskContentModal.removeChild(modalDescriptionContent);
+                    
+                    this.containerBoard.innerHTML = "";
+                    this.setLocalData();
+
+                    this.drawContent(this.data);
+                    this.drawContainerBoard();
+                } 
                 
             }
+           
         })
     }
 
     drawContainerBoard() {
-        this.id = Date.now() + Math.random(1, 1000); 
+
         this.addColumnButton = document.createElement("div");
         this.addColumnButton.classList.add("button-add-column");
         this.addColumnButton.classList.add("column");
+        // this.addColumnButton.draggable = "true";
+
         this.addColumnButton.innerHTML = "+ add column";
         this.containerBoard.append(this.addColumnButton);
         this.buttonClicked = true;
-        
   
         this.addColumnButton.onclick = (evt) => {
             evt.stopPropagation();
 
-
             if(this.buttonClicked === true) {
-                // this.columnCntObj = {};
-                // this.containerBoardObj.push(this.columnCntObj)
-                
                 evt.stopPropagation();
                 this.addColumnButton.innerHTML = "";
                 this.addColumnButton.classList.remove("button-add-column");
@@ -401,12 +447,12 @@ class Trello {
                 titleInput.classList.add("title-input");
                 this.addColumnButton.append(titleInput);
                 titleInput.placeholder = "Enter column title";
-                
-                
+
 
                 titleInput.onclick = (evt) => {
                     evt.stopPropagation();
                 }
+
                 let columnTitleControls = document.createElement("div");
                 columnTitleControls.classList.add("column__title-controls");
                 this.addColumnButton.append(columnTitleControls);
@@ -419,10 +465,12 @@ class Trello {
                 addColumnTitle.onclick = (evt) => {
                     evt.stopPropagation();
                     if(titleInput.value != "") 
-                    {
-                        this.addColumnButton.id = this.id;
+                    {   
+                        let id = 'id_' + Math.random(1, 1000);
+
+                        this.addColumnButton.id = id;
                         this.column = {};
-                        this.column.id = this.id + '';
+                        this.column.id = id;
                         this.addColumnButton.innerHTML = "";
                         this.column.title = titleInput.value;
                         this.column.tasks = [];
@@ -430,17 +478,10 @@ class Trello {
                         this.addColumnButton.innerHTML = "";
                         this.setLocalData();
                         
-                        this.drawColumn(this.column.title);
-                        this.drawTaskContent();
-                        this.drawModalWindow();
-                        
-                        
-                       
+                        this.drawColumn(this.column.title, this.column.id);
+                        this.drawTaskContent(this.taskContent, id);
                         this.drawContainerBoard();
-                        
-                        
                 
-                        
                     }
                 }
                 
@@ -459,14 +500,14 @@ class Trello {
             }
             
         }
-        
+        this.dragDropTask()
 
     }
     render() 
-    {   
+    {           
         this.addColumnButton;
         this.localStorageObj = localStorage.getItem("columnsData");
-        
+
         this.columnContent;
         
         this.containerBoard = document.createElement("div");
@@ -474,30 +515,173 @@ class Trello {
         this.container.append(this.containerBoard);
 
         this.drawContainerBoard();
-        this.drawModalWindow();
+        this?.data?.forEach((el) => {
+            let id = el.id; 
+            this.addColumnButton.innerHTML = "";
+            this.addColumnButton.classList.remove("button-add-column");
+            this.drawColumn(el.title, id);
 
-    this?.data?.forEach((el) => {
-        this.addColumnButton.innerHTML = "";
-        this.addColumnButton.classList.remove("button-add-column");
-        this.addColumnButton.id = this.id;
-        this.drawColumn(el.title);
-
-        el.tasks.forEach((task) => {
-            this.drawTask(task.title, this.taskContent);
+            this.drawtaskDescriptionContentLogo(el)
+            this.drawTaskContent(this.taskContent, id);
+            this.drawContainerBoard();
         })
-        this.drawTaskContent();
-        this.drawContainerBoard();
-
-    })
-    
-
+        console.log(this.data);
     }
     
-    getLocalData(){
+    
+    drawContent(data) {
+        data?.forEach((el) => {
+            let id = el.id; 
+            this.addColumnButton = document.createElement("div");
+            this.addColumnButton.classList.add("column");
+            this.addColumnButton.id = el.id
+            this.containerBoard.append(this.addColumnButton);
+            
+            this.drawColumn(el.title, id);
+            this.drawtaskDescriptionContentLogo(el)
+            this.drawTaskContent(this.taskContent, id);
+        })
+    }
+    
+    drawtaskDescriptionContentLogo(elem) {
+        elem.tasks.forEach((task) => {
+            this.drawTask(task.title, this.taskContent, this.taskContent.id);
+            if(task.description === "") {
+                this.taskDescriptionContentLogo.classList.remove("task-description-content-logo_display-block");
+                this.taskDescriptionContentLogo.classList.add("task-description-content-logo");
+            }
+            if(task.description != "") {
+                this.taskDescriptionContentLogo.classList.add("task-description-content-logo_display-block");
+            }
+        })
+    }
+
+    dragDropTask() {
+        let taskTitleArr = [];
+        let draggedItem = null;
+        this.container.querySelectorAll(".task-content-title").forEach(item => {
+             
+            item.addEventListener('dragstart', (e) => {
+                e.stopPropagation()
+                draggedItem = item;
+                setTimeout(() => {
+                    draggedItem.style.display = "none"
+                },100)
+            })
+            item.addEventListener('dragend', (e) => {
+                e.stopPropagation()
+                draggedItem.style.display = "block";
+            })
+           
+                
+                item.addEventListener("dragover", (evt) => evt.preventDefault())
+                item.addEventListener("drop", (evt) => {
+                        taskTitleArr = [... document.querySelectorAll(".task-content-title")]
+                        let taskTitleArrFiltr
+                        if(draggedItem != null) {
+                            taskTitleArrFiltr = taskTitleArr.filter(elem => elem.id === draggedItem.id)
+                            let ind = taskTitleArrFiltr.indexOf(draggedItem)
+                            console.log(ind);
+                            let task = this.data.find(elem => elem.id === draggedItem.id).tasks[ind]
+                            this.data.find(elem => elem.id === draggedItem.id).tasks.splice(ind,1)
+                            this.setLocalData()
+                            console.log(task);
+                            if(evt.clientY-10 < item.getBoundingClientRect().y) {
+                                item.before(draggedItem)
+                                draggedItem.id = item.id
+                                taskTitleArrFiltr = taskTitleArr.filter(elem => elem.id === item.id)
+                            ind = taskTitleArrFiltr.indexOf(item)
+                            this.data.find(elem => elem.id === item.id).tasks.splice(ind, 0, task)
+                            this.setLocalData()
+                            } 
+                            if(evt.clientY+10 > item.getBoundingClientRect().y) {
+                                item.after(draggedItem)
+                                draggedItem.id = item.id
+                                taskTitleArrFiltr = taskTitleArr.filter(elem => elem.id === item.id)
+                            ind = taskTitleArrFiltr.indexOf(item)
+                            this.data.find(elem => elem.id === item.id).tasks.splice(ind, 0, task)
+                            this.setLocalData()
+                            }
+                            
+                            console.log(taskTitleArrFiltr);
+                            console.log(this.data);
+                        }
+                        
+                        // console.log(draggedItem.id);
+                })
+            // })
+            // this.container.querySelectorAll(".column__task-content").forEach(el => {
+            //     el.addEventListener('drop', function(e)  {
+            //         e.stopPropagation()
+            //         console.log(item.clientY);
+            //         // if(el.clientY < elem.getBoundingClientRect().y) {
+            //         //     el.before(draggedItem)
+            //         // }
+            //     })
+            // });
+        })
+        
+        
+    }
+    
+    // dragDropColumns() {
+    //     this.container.querySelectorAll(".column").forEach(item => {
+    //         item.addEventListener('dragstart', dragStart);
+ 
+    //             function dragStart(evt) {
+    //                 evt.dataTransfer.setData('text/plain', evt.target.id);
+    //                 setTimeout(() => {
+    //                     evt.target.classList.add('hide');
+    //                 }, 0);
+    //             }
+    //         })
+
+
+    //             document.querySelectorAll(".container-board").forEach(box => {
+    //                 box.addEventListener('dragenter', dragEnter)
+    //                 box.addEventListener('dragover', dragOver);
+    //                 box.addEventListener('dragleave', dragLeave);
+    //                 box.addEventListener('drop', drop);
+    //             });
+
+
+    //             function dragEnter(evt) {
+    //                 evt.preventDefault();
+    //                 evt.target.classList.add('drag-over');
+    //             }
+
+    //             function dragOver(evt) {
+    //                 evt.preventDefault();
+    //                 evt.target.classList.add('drag-over');
+    //             }
+
+    //             function dragLeave(evt) {
+    //                 evt.target.classList.remove('drag-over');
+    //             }
+
+    //             function drop(evt) {
+    //                 evt.preventDefault();
+    //                 evt.stopPropagation()
+    //                 evt.target.classList.remove('drag-over');
+
+    //                 const id = evt.dataTransfer.getData('text/plain');
+    //                 const draggable = document.getElementById(id);
+
+    //                 evt.target.append(draggable);
+    //                 console.log(evt.target);
+
+    //                 draggable.classList.remove('hide');
+    //             }
+
+    // }
+
+    getLocalData()
+    {
          let localData = localStorage.getItem("columnsData") || '[]';
          return JSON.parse(localData);
     }
-    setLocalData(){
+    setLocalData()
+    {
         localStorage.setItem('columnsData', JSON.stringify(this.data))
     }
     

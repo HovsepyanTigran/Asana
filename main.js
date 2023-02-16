@@ -2,26 +2,36 @@ class Trello {
     constructor(container) {
         this.container = container;
         this.data = this.getLocalData() || [];
+
         this.render();
+        
     }
 
     drawColumn(title, id) 
-    {           
+    {          
+  
         this.columnContent = document.createElement("div");
         this.columnContent.classList.add("column-content");
         this.addColumnButton.append(this.columnContent);
         this.columnContent.id = id;
             
+        this.content = document.createElement("div");
+        this.content.classList.add("content");
+        this.columnContent.append(this.content)
+
         let columnTitleContent = document.createElement("div");
         columnTitleContent.classList.add("column-title-content");
-        this.columnContent.append(columnTitleContent);
+        this.content.append(columnTitleContent);
 
         let columnTitle = document.createElement("input");
         columnTitle.classList.add("column-title");
         columnTitleContent.append(columnTitle);
         columnTitle.value = title;
         columnTitle.id = id;
-        
+        columnTitle.onclick = (evt) => {
+            evt.stopPropagation();
+            evt.preventDefault()
+        }
         columnTitle.addEventListener("keypress", evt => {
             evt.stopPropagation();
             if(evt.keyCode === 13) {
@@ -39,11 +49,17 @@ class Trello {
         columnTitleContent.append(this.deleteColumnButton);
         this.deleteColumnButton.id = id;
 
+        
 
         this.taskContent = document.createElement("div");
         this.taskContent.classList.add("column__task-content");
-        this.columnContent.append(this.taskContent);
+        this.content.append(this.taskContent);
         this.taskContent.id = id
+        
+        // let numsTasks = document.createElement("p");
+        // this.taskContent.classList.add("number__tasks");
+        // this.taskContent.append(numsTasks);
+        // numsTasks.innerHTML = a.length-2
 
         this.container.querySelectorAll(".column-delete-button").forEach(item => {
             
@@ -66,98 +82,109 @@ class Trello {
                     
                     this.drawtaskDescriptionContentLogo(elem)
 
-                    this.drawTaskContent(this.taskContent, elem.id);
+                    this.drawTaskContent(this.columnContent, elem.id);
+                    this.dragDropTask();
+
                 })
                 
                 this.drawContainerBoard();
             }
             
-        })     
-        
+        }) 
+           
+        this.dragDropColumns();
+
     }
 
     
     drawTaskContent(cnt, id) 
-    { 
+    {   
         this.taskClmnCntsArr = [];
+        let clmnCntArr = [... this.container.querySelectorAll(".column-content")]
         this.addTaskButton = document.createElement("button");
         this.addTaskButton.classList.add("button-add-task");
         this.addTaskButton.innerHTML = "+ add Task";
         cnt.append(this.addTaskButton);
         this.addTaskButton.id = id;
-
+        
         this.container.querySelectorAll(".column__task-content").forEach(taskCnt => {
             this.taskClmnCntsArr.push(taskCnt)
 
             this.container.querySelectorAll(".button-add-task").forEach((item) => { 
                 item.onclick = (evt) => {
+                    evt.preventDefault()
+                    evt
                     evt.stopPropagation();
                     item.remove();
-                    let cnt = this.taskClmnCntsArr.findIndex(elem => elem.id === item.id)
+                    let ind = this.taskClmnCntsArr.findIndex(elem => elem.id === item.id)
 
                     let titleTextArea = document.createElement("textarea");
                     titleTextArea.classList.add("task-content__textarea");
-                    this.taskClmnCntsArr[cnt].append(titleTextArea);
+                    clmnCntArr[ind].append(titleTextArea);
                     titleTextArea.placeholder = "Enter task title";
-
+                    
                     titleTextArea.onclick = (evt) => {
                         evt.stopPropagation();
                     }
                     let taskTitleControls = document.createElement("div");
                             taskTitleControls.classList.add("column__title-controls");
-                            this.taskClmnCntsArr[cnt].append(taskTitleControls);
+                            clmnCntArr[ind].append(taskTitleControls);
             
                             let addTaskTitle = document.createElement("button");
                             addTaskTitle.classList.add("button-add-column__title");
                             addTaskTitle.innerHTML = "Add task";
                             taskTitleControls.append(addTaskTitle);
-                            addTaskTitle
             
                             let closeTaskButton = document.createElement("button");
                             closeTaskButton.classList.add("column-close-button");
                             closeTaskButton.innerHTML = "x";
                             taskTitleControls.append(closeTaskButton);
                             addTaskTitle.onclick = (evt) => 
-                            {
+                            {   
+                                evt.preventDefault()
                                 let taskId = 'id_' + Math.random(1, 1000);
                                 if(titleTextArea.value != "") 
                                 {   evt.stopPropagation();
-                                    this.taskClmnCntsArr[cnt].removeChild(titleTextArea);
-                                    this.taskClmnCntsArr[cnt].removeChild(taskTitleControls);
-                                    this.data[cnt].tasks.push({title:titleTextArea.value, description:'', id: taskId});
+                                    clmnCntArr[ind].removeChild(titleTextArea);
+                                    clmnCntArr[ind].removeChild(taskTitleControls);
+                                    this.data[ind].tasks.push({title:titleTextArea.value, description:'', id: taskId});
                                     
                                     this.setLocalData();
-                                    this.drawTask(titleTextArea.value, this.taskClmnCntsArr[cnt], this.taskClmnCntsArr[cnt].id);
+                                    this.drawTask(titleTextArea.value, this.taskClmnCntsArr[ind], this.taskClmnCntsArr[ind].id);
 
-                                    this.taskClmnCntsArr[cnt].append(item);
+                                    clmnCntArr[ind].append(item);
+                                    this.dragDropTask();
+
                                 }
                             }
 
                             closeTaskButton.onclick = (evt) => 
                             {   evt.stopPropagation()
-                                this.taskClmnCntsArr[cnt].removeChild(titleTextArea);
-                                this.taskClmnCntsArr[cnt].removeChild(taskTitleControls);
+                                clmnCntArr[ind].removeChild(titleTextArea);
+                                clmnCntArr[ind].removeChild(taskTitleControls);
 
-                                this.taskClmnCntsArr[cnt].append(item);
+                                clmnCntArr[ind].append(item);
 
                             }
                         
                 }
             })
+
         })
-        
-        
+                
         
     }
 
     drawTask(taskDesctitle, content, id) {
-
         this.delTaskBtnArr = [];
         let taskContentTitle = document.createElement("div");
         taskContentTitle.classList.add("task-content-title");
-        taskContentTitle.draggable = "true";
+        taskContentTitle.onclick = (evt) => {
+            evt.stopPropagation()
+        }
         taskContentTitle.id = id; 
         content.append(taskContentTitle);
+        
            
                     
         let taskTitle = document.createElement("div");
@@ -169,7 +196,6 @@ class Trello {
         title.classList.add("title");
         taskTitle.append(title);
         title.innerHTML = taskDesctitle;
-        title
          
         let deleteTaskButton = document.createElement("button");
         deleteTaskButton.classList.add("delete-task-button");
@@ -185,9 +211,9 @@ class Trello {
                 item.onclick = (evt) => {
                     evt.stopPropagation();
                     
-                    let delTaskBtnArrFiltr = this.delTaskBtnArr.filter(elem => elem.id === item.id);
+                    let delTaskBtnFilterArr = this.delTaskBtnArr.filter(elem => elem.id === item.id);
                     let ind = this.taskClmnCntsArr.findIndex(elem => elem.id === item.id);
-                    this.data[ind].tasks.splice(delTaskBtnArrFiltr.indexOf(item),1);
+                    this.data[ind].tasks.splice(delTaskBtnFilterArr.indexOf(item),1);
                     
                     this.setLocalData();
                     this.containerBoard.innerHTML = "";
@@ -195,10 +221,12 @@ class Trello {
                     this.drawContent(this.data);
 
                     this.drawContainerBoard();
+
                 }
         });
         
-        this.drawModalWindow();
+        this.drawModalWindow();             
+
     }
     
     drawModalWindow() {
@@ -212,19 +240,26 @@ class Trello {
             taskTitleArr.push(elem)
             elem.onclick = (evt) => {
                 evt.stopPropagation()
-                let taskTitleArrFiltr = taskTitleArr.filter(item => item.id === elem.id); 
+                let taskTitleFilterArr = taskTitleArr.filter(item => item.id === elem.id); 
                 
                 let ind1 = this.taskClmnCntsArr.findIndex(item => item.id === elem.id);
-                let ind = taskTitleArrFiltr.indexOf(elem);
+                let ind = taskTitleFilterArr.indexOf(elem);
 
                 let taskContentOverlay = document.querySelector(".task-content__overlay-window");
                 let taskContentModal = document.querySelector(".task-content__modal");
                 
                 taskContentOverlay.classList.add("task-content__overlay-window_display-block");
                 
+                
+                
                 let modalHeader = document.createElement("div");
                 modalHeader.classList.add("modal-header");
                 taskContentModal.append(modalHeader);
+
+                let columnTitleInfo = document.createElement('span');
+                columnTitleInfo.classList.add("column-title-info")
+                taskContentModal.append(columnTitleInfo);
+                columnTitleInfo.innerHTML = `in column ${this.data[ind1].title}`;
 
                 let taskContentModalTitle = document.createElement('textarea');
                 taskContentModalTitle.classList.add("modal-title");
@@ -286,9 +321,7 @@ class Trello {
                     modalDescriptionTextAreaContent.append(modalDescriptionControls);
                     modalDescriptionControls.append(addDescriptionButton);
                     modalDescriptionControls.append(closeDescriptionButton);
-                    
-                    modalDescriptionContent.append(modalDescription);
-                    
+                                        
                     addDescriptionButton.onclick = () => {
                         if(modalDescriptionTextArea.value != "") {
                             modalDescriptionContent.removeChild(modalDescriptionTextAreaContent);
@@ -411,7 +444,7 @@ class Trello {
                     taskContentOverlay.classList.remove("task-content__overlay-window_display-block");
                     taskContentModal.removeChild(modalHeader);
                     taskContentModal.removeChild(modalDescriptionContent);
-                    
+                    taskContentModal.removeChild(columnTitleInfo)
                     this.containerBoard.innerHTML = "";
                     this.setLocalData();
 
@@ -425,15 +458,14 @@ class Trello {
     }
 
     drawContainerBoard() {
-
+        
         this.addColumnButton = document.createElement("div");
         this.addColumnButton.classList.add("button-add-column");
         this.addColumnButton.classList.add("column");
-        // this.addColumnButton.draggable = "true";
-
         this.addColumnButton.innerHTML = "+ add column";
         this.containerBoard.append(this.addColumnButton);
         this.buttonClicked = true;
+        this.xCoordinatesArr = [];
   
         this.addColumnButton.onclick = (evt) => {
             evt.stopPropagation();
@@ -442,6 +474,7 @@ class Trello {
                 evt.stopPropagation();
                 this.addColumnButton.innerHTML = "";
                 this.addColumnButton.classList.remove("button-add-column");
+                evt.stopPropagation();
 
                 let titleInput = document.createElement("input");
                 titleInput.classList.add("title-input");
@@ -479,12 +512,14 @@ class Trello {
                         this.setLocalData();
                         
                         this.drawColumn(this.column.title, this.column.id);
-                        this.drawTaskContent(this.taskContent, id);
+                        this.drawTaskContent(this.columnContent, id);
                         this.drawContainerBoard();
-                
+                        this.dragDropTask();
+
+
                     }
                 }
-                
+
                 let closeColumnButton = document.createElement("button");
                 closeColumnButton.classList.add("column-close-button");
                 closeColumnButton.innerHTML = "x";
@@ -500,11 +535,12 @@ class Trello {
             }
             
         }
-        this.dragDropTask()
 
+   
     }
+
     render() 
-    {           
+    {            
         this.addColumnButton;
         this.localStorageObj = localStorage.getItem("columnsData");
 
@@ -519,13 +555,16 @@ class Trello {
             let id = el.id; 
             this.addColumnButton.innerHTML = "";
             this.addColumnButton.classList.remove("button-add-column");
+            this.addColumnButton.id = id;
+            
             this.drawColumn(el.title, id);
-
-            this.drawtaskDescriptionContentLogo(el)
-            this.drawTaskContent(this.taskContent, id);
+            this.drawtaskDescriptionContentLogo(el);
+            this.drawTaskContent(this.columnContent, id);
             this.drawContainerBoard();
+            this.dragDropTask();
+
         })
-        console.log(this.data);
+
     }
     
     
@@ -534,13 +573,15 @@ class Trello {
             let id = el.id; 
             this.addColumnButton = document.createElement("div");
             this.addColumnButton.classList.add("column");
-            this.addColumnButton.id = el.id
+            this.addColumnButton.id = el.id;
             this.containerBoard.append(this.addColumnButton);
             
             this.drawColumn(el.title, id);
-            this.drawtaskDescriptionContentLogo(el)
-            this.drawTaskContent(this.taskContent, id);
+            this.drawtaskDescriptionContentLogo(el);
+            this.drawTaskContent(this.columnContent, id);
+            this.dragDropTask()
         })
+        
     }
     
     drawtaskDescriptionContentLogo(elem) {
@@ -554,126 +595,239 @@ class Trello {
                 this.taskDescriptionContentLogo.classList.add("task-description-content-logo_display-block");
             }
         })
-    }
 
-    dragDropTask() {
-        let taskTitleArr = [];
-        let draggedItem = null;
+    }
+    
+
+
+    dragDropTask() { 
+        var taskTitleArr = [];
+        var taskTitleFilterArr
+        this.draggedItem = null;
+        let self = this;
+        self.taskYCoordinatesArr = [];
+        self.taskYCoordinatesFilterArr = []
+        this.yCoordinate;
+        this.mouseYPosition;
+        this.ind;
+        this.task;
+        
         this.container.querySelectorAll(".task-content-title").forEach(item => {
-             
-            item.addEventListener('dragstart', (e) => {
-                e.stopPropagation()
-                draggedItem = item;
-                setTimeout(() => {
-                    draggedItem.style.display = "none"
-                },100)
-            })
-            item.addEventListener('dragend', (e) => {
-                e.stopPropagation()
-                draggedItem.style.display = "block";
-            })
-           
-                
-                item.addEventListener("dragover", (evt) => evt.preventDefault())
-                item.addEventListener("drop", (evt) => {
-                        taskTitleArr = [... document.querySelectorAll(".task-content-title")]
-                        let taskTitleArrFiltr
-                        if(draggedItem != null) {
-                            taskTitleArrFiltr = taskTitleArr.filter(elem => elem.id === draggedItem.id)
-                            let ind = taskTitleArrFiltr.indexOf(draggedItem)
-                            console.log(ind);
-                            let task = this.data.find(elem => elem.id === draggedItem.id).tasks[ind]
-                            this.data.find(elem => elem.id === draggedItem.id).tasks.splice(ind,1)
-                            this.setLocalData()
-                            console.log(task);
-                            if(evt.clientY-10 < item.getBoundingClientRect().y) {
-                                item.before(draggedItem)
-                                draggedItem.id = item.id
-                                taskTitleArrFiltr = taskTitleArr.filter(elem => elem.id === item.id)
-                            ind = taskTitleArrFiltr.indexOf(item)
-                            this.data.find(elem => elem.id === item.id).tasks.splice(ind, 0, task)
-                            this.setLocalData()
-                            } 
-                            if(evt.clientY+10 > item.getBoundingClientRect().y) {
-                                item.after(draggedItem)
-                                draggedItem.id = item.id
-                                taskTitleArrFiltr = taskTitleArr.filter(elem => elem.id === item.id)
-                            ind = taskTitleArrFiltr.indexOf(item)
-                            this.data.find(elem => elem.id === item.id).tasks.splice(ind, 0, task)
-                            this.setLocalData()
-                            }
-                            
-                            console.log(taskTitleArrFiltr);
-                            console.log(this.data);
-                        }
-                        
-                        // console.log(draggedItem.id);
+            taskTitleArr.push(item)
+            
+            if(item.getAttribute('dragActivated') == 'true') return;
+            item.setAttribute('dragActivated', 'true');
+            item.draggable = "true";
+            
+            item.addEventListener('dragstart', (evt) => {
+                evt.stopPropagation();
+                this.draggedItem = item;
+                if(this.draggedItem) this.draggedItem.drop = false;
+                this.mouseYPosition = evt.clientY;
+
+                taskTitleFilterArr = taskTitleArr.filter(elem => elem.id === this.draggedItem.id);
+                this.ind = taskTitleFilterArr.indexOf(this.draggedItem);
+                this.task = this.data.find(elem => elem.id === this.draggedItem.id).tasks[this.ind];
+                this.data.find(elem => elem.id === this.draggedItem.id).tasks.splice(this.ind,1);
+
+                taskTitleFilterArr.forEach(item => {
+                    self.taskYCoordinatesArr.push(item.getBoundingClientRect().y);
                 })
-            // })
-            // this.container.querySelectorAll(".column__task-content").forEach(el => {
-            //     el.addEventListener('drop', function(e)  {
-            //         e.stopPropagation()
-            //         console.log(item.clientY);
-            //         // if(el.clientY < elem.getBoundingClientRect().y) {
-            //         //     el.before(draggedItem)
-            //         // }
-            //     })
-            // });
+
+                this.yCoordinate = self.taskYCoordinatesArr[this.ind];
+                self.taskYCoordinatesArr.splice(this.ind,1);
+                this.setLocalData();
+
+                setTimeout(() => {
+                    this.draggedItem.classList.remove("task-content-title");
+                    this.draggedItem.classList.add("task-content-title-display-none");
+                },0);
+
+            });
+            item.addEventListener('dragend', (evt) => {
+                if(this.draggedItem != null && this.draggedItem.drop === false) {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    this.draggedItem.classList.remove("task-content-title-display-none");
+                    this.draggedItem.classList.add("task-content-title");
+                    this.data.find(elem => elem.id === this.draggedItem.id).tasks.splice(this.ind,0,this.task);
+                    self.columnsXCoordinatesArr.splice(this.ind, 0, this.yCoordinate)
+                    this.setLocalData();
+                    
+                }
+
+            })
+
+            
         })
         
+        this.container.querySelectorAll(".column__task-content").forEach(cnt => {
+
+            if(cnt.getAttribute('dragActivated') == 'true') return;
+            cnt.setAttribute('dragActivated', 'true');
+
+            cnt.addEventListener('dragover', evt => {
+                evt.preventDefault()
+            })
+
+            cnt.addEventListener('drop', evt => {
+                evt.preventDefault();
+                evt.stopPropagation();
+                if(cnt.childNodes.length != 0) {
+                    if(this.draggedItem != null) {
+                        taskTitleFilterArr = taskTitleArr.filter(item => item.id === cnt.id)
+                        self.taskYCoordinatesArr = []
+                        taskTitleFilterArr.forEach(item => {
+                            self.taskYCoordinatesArr.push(item.getBoundingClientRect().y)
+                        })
+
+                        let goal = evt.clientY;
+                        var closest = self.taskYCoordinatesArr.reduce(function(prev, curr) {
+                            return (Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
+                        });
+                        this.ind = self.taskYCoordinatesArr.indexOf(closest)
+                        if(goal < closest && goal > this.mouseYPosition) {
+                            this.data.find(elem => elem.id === cnt.id).tasks.splice(this.ind-1, 0, this.task);
+                            this.setLocalData()
+                        }
+                        else if(goal > closest) {
+                            this.data.find(elem => elem.id === cnt.id).tasks.splice(this.ind+1, 0, this.task);
+                            this.setLocalData()
+                        }
+                        else if(goal < closest && goal < this.mouseYPosition) {
+                            this.data.find(elem => elem.id === cnt.id).tasks.splice(this.ind, 0, this.task);
+                            this.setLocalData()
+                        }
+                        else if(goal > closest && goal > this.mouseYPosition) {
+                            this.data.find(elem => elem.id === cnt.id).tasks.splice(this.ind-1, 0, this.task);
+                            this.setLocalData()
+                        }
+                        this.draggedItem.drop = true
+
+                        this.containerBoard.innerHTML = "";
+
+                        this.drawContent(this.data);
+
+                        this.drawContainerBoard();
+                        
+                    }
+                }
+                else {
+                    if(this.draggedItem != null) {
+                    this.data.find(elem => elem.id === cnt.id).tasks.splice(0, 0, this.task);
+                    this.setLocalData();
+                    
+                    this.draggedItem.drop = true
+
+                    this.containerBoard.innerHTML = "";
+
+                    this.drawContent(this.data);
+
+                    this.drawContainerBoard();
+                    
+                    }
+                }
+            })
+            
+            
+        })
+
+
         
     }
     
-    // dragDropColumns() {
-    //     this.container.querySelectorAll(".column").forEach(item => {
-    //         item.addEventListener('dragstart', dragStart);
+    dragDropColumns() {
+        let draggedItem = null;
+        let ind;
+        let clmn;
+        let self = this;
+        self.columnsXCoordinatesArr = [];
+        let xCoordinate;
+        let mouseXPosition;
+        this.container.querySelectorAll(".column").forEach(item => {
+            
+            self.columnsXCoordinatesArr.push(item.getBoundingClientRect().x)
+
+            if(item.classList.contains('button-add-column') === true || item.getAttribute('dragActivated') == 'true'){
+                return
+            }
+            
+            item.setAttribute('dragActivated', 'true');
+
+            item.draggable = "true";
+            item.addEventListener('dragstart', (evt) => {
+                evt.stopPropagation();
+                mouseXPosition = evt.clientX;
+                draggedItem = item;
+
+                if(draggedItem != null) draggedItem.drop = false;
+                ind = this.data.findIndex(elem => elem.id === draggedItem.id);
+                clmn = this.data[ind];
+                this.data.splice(ind,1);
+                xCoordinate = self.columnsXCoordinatesArr[ind];
+                self.columnsXCoordinatesArr.splice(ind, 1);
+                this.setLocalData();
+
+
+                setTimeout(() => {
+                    draggedItem.classList.remove("column");
+                    draggedItem.classList.add("column-display-none");
+                },0)
+            })
+
+            this.containerBoard.addEventListener("dragover", (evt) => {
+                evt.preventDefault();
+            })
+
+            this.containerBoard.addEventListener('drop', (evt) => {
+                evt.preventDefault()
+                evt.stopPropagation();
+
+                if(draggedItem != null) {
+                    let goal = evt.clientX;
+                    var closest = self.columnsXCoordinatesArr.reduce(function(prev, curr) {
+                        return (Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
+                    });
+
+                    draggedItem.drop = true;
+
  
-    //             function dragStart(evt) {
-    //                 evt.dataTransfer.setData('text/plain', evt.target.id);
-    //                 setTimeout(() => {
-    //                     evt.target.classList.add('hide');
-    //                 }, 0);
-    //             }
-    //         })
 
+                    if(goal < closest && goal > mouseXPosition) {
+                        this.data.splice(self.columnsXCoordinatesArr.indexOf(closest)+1, 0, clmn);
+                        this.setLocalData();
+                    } else if(goal < closest && goal < mouseXPosition) {
+                        this.data.splice(self.columnsXCoordinatesArr.indexOf(closest), 0, clmn);
+                        this.setLocalData();
+                    } else if(goal > closest && goal < mouseXPosition) {
+                        this.data.splice(self.columnsXCoordinatesArr.indexOf(closest), 0, clmn);
+                        this.setLocalData();
+                    } else if(goal > closest && goal > mouseXPosition) {
+                        this.data.splice(self.columnsXCoordinatesArr.indexOf(closest)+1, 0, clmn);
+                        this.setLocalData();
+                    }
 
-    //             document.querySelectorAll(".container-board").forEach(box => {
-    //                 box.addEventListener('dragenter', dragEnter)
-    //                 box.addEventListener('dragover', dragOver);
-    //                 box.addEventListener('dragleave', dragLeave);
-    //                 box.addEventListener('drop', drop);
-    //             });
+                    this.container.innerHTML = "";
+                    this.render()
+                }
+            })
+            
+                item.addEventListener('dragend', (evt) => {
+                    if(draggedItem != null && draggedItem.drop === false) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        draggedItem.classList.remove("column-display-none");
+                        draggedItem.classList.add("column");
+                        this.data.splice(ind,0,clmn);
+                        self.columnsXCoordinatesArr.splice(ind, 0, xCoordinate)
+                        this.setLocalData();
+                        
+                    }
 
+                })
+        })
 
-    //             function dragEnter(evt) {
-    //                 evt.preventDefault();
-    //                 evt.target.classList.add('drag-over');
-    //             }
-
-    //             function dragOver(evt) {
-    //                 evt.preventDefault();
-    //                 evt.target.classList.add('drag-over');
-    //             }
-
-    //             function dragLeave(evt) {
-    //                 evt.target.classList.remove('drag-over');
-    //             }
-
-    //             function drop(evt) {
-    //                 evt.preventDefault();
-    //                 evt.stopPropagation()
-    //                 evt.target.classList.remove('drag-over');
-
-    //                 const id = evt.dataTransfer.getData('text/plain');
-    //                 const draggable = document.getElementById(id);
-
-    //                 evt.target.append(draggable);
-    //                 console.log(evt.target);
-
-    //                 draggable.classList.remove('hide');
-    //             }
-
-    // }
+    }
 
     getLocalData()
     {
@@ -689,3 +843,7 @@ class Trello {
 
 new Trello(document.querySelector(".container"))
 
+// let numsTasks = document.createElement("p");
+//  numsTasks.classList.add("number__tasks");
+//         this.taskContent.append(numsTasks);
+//         numsTasks.innerHTML = `${this.taskContent.childNodes.length-1} task`

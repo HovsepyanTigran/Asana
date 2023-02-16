@@ -48,9 +48,8 @@ body {
 
 .button-add-column {
     min-height: 40px;
-    border-radius: 4px;
     background-color: rgb(150, 150, 150);
-    opacity: 0.5; 
+    opacity: 0.4; 
 }
 
 .column-content {
@@ -61,7 +60,7 @@ body {
     flex-direction: column;
     width: 250px;
     height: 100%;
-    margin-left: 10px;
+    margin-left: 20px;
     margin-top: 10px;
     cursor: pointer;
     border-radius: 14px;
@@ -69,7 +68,16 @@ body {
     align-items: center;
     justify-content: center;
 }
+.column-display-none {
+    display: none
+}
 
+.column-margin-left {
+    margin-left: 100px;
+}
+.column-margin-right {
+    margin-right: 100px;
+}
 .button-add-column:hover {
     background-color: rgb(180, 180, 180);
 }
@@ -123,7 +131,8 @@ body {
 }
 
 .column-title {
-    background-color: rgb(248, 248, 248);
+    background-color: rgb(226, 225, 225);
+    font-style: oblique;
 }
 
 .column-title:hover {
@@ -131,12 +140,12 @@ body {
 }
 
 .column-delete-button {
-    background-image: url(../trello/pictures/delete-logo.png);
+    background-image: url(../trello/pictures/delete-clmn-btn.png);
     background-repeat: no-repeat;
     background-size: cover;
     width: 16px;
     height: 16px;
-    margin-left: 16px;
+    margin-left: 26px;
     cursor: pointer;
 }
 
@@ -149,24 +158,30 @@ body {
     flex-direction: column;
     flex-wrap: wrap;
     width: 200px;
-    min-height: 100px;
+    min-height: 10px;
     margin-top: 10px;
+    background-color: #df1414;
 }
 
 .task-content__textarea {
     display: flex;
     margin-top: 6px;
+    min-width: 200px;
+    min-height: 10px;
 }
 
 .task-content-title {
     display: flex;
     flex-direction: column;
     width: 200px;
-    margin-top: 8px;
+    margin-top: 12px;
     background-color: white;
 }
+.task-content-title-display-none {
+    display: none;
+}
 .task-content-title:hover {
-    background-color: rgb(184, 182, 182);
+    background-color: rgb(196, 196, 196);
 }
 .task-title {
     display: flex;
@@ -176,11 +191,10 @@ body {
     margin-top: 4px;
 }
 
-
 .button-add-task {
     width: 100px;
     height: 20px;
-    margin-top: 10px;
+    margin-top: 20px;
     background-color: rgb(226, 225, 225);
     cursor: pointer;
     border-radius: 4px;
@@ -200,7 +214,7 @@ body {
 
 
 .delete-task-button {
-    background-image: url(../trello/pictures/delete-logo.png);
+    background-image: url(../trello/pictures/delete-task-btn.png);
     background-repeat: no-repeat;
     background-size: cover;
     width: 16px;
@@ -249,6 +263,10 @@ body {
     z-index: 11;
 }
 
+.column-title-info {
+    margin: 10px;
+    font-style: italic;
+}
 
 .modal-header {
     display: flex;
@@ -264,6 +282,7 @@ body {
     margin-left: 6px;
     font-size: 16px;
     background-color: #e7e6e6;
+    border: 1px solid black;
 }
 
 .modal-close-button {
@@ -290,11 +309,12 @@ body {
 
 .modal-description-text-area-content {
     margin-left: 10px;
+    
 }
 .modal-description {
     width: 700px;
-    height: 50px;;
-    background-color: #e7e6e6;
+    min-height: 20px;;
+    background-color: white;
     margin: 20px;
 }
 .button-add-description {
@@ -310,6 +330,11 @@ body {
     text-align: center;
     font-size: 16px;
     cursor: pointer;
+    opacity: 0.5;
+    background-color: #e7e6e6;
+}
+.modal-description-close-button:hover {
+    opacity: 0.9;
 }
 .hide {
     visibility: hidden;

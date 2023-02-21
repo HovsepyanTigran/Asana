@@ -58,7 +58,7 @@ body {
 .column {
     display: flex;
     flex-direction: column;
-    width: 250px;
+    width: 260px;
     height: 100%;
     margin-left: 20px;
     margin-top: 10px;
@@ -122,16 +122,31 @@ body {
 .column-close-button:hover {
     opacity: 0.9;
 }
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .column-title-content {
     display: flex;
     flex-direction: row;
-    width: 200px;
+    justify-content: space-between;
+    width: 210px;
     min-height: 20px;
     margin-top: 8px;
 }
 
+.column-title-text-area {
+    resize: none;
+}
+
 .column-title {
     background-color: rgb(226, 225, 225);
+    font-size: 14px;
+    width: 180px;
+    font-weight: bold;
     font-style: oblique;
 }
 
@@ -145,7 +160,7 @@ body {
     background-size: cover;
     width: 16px;
     height: 16px;
-    margin-left: 26px;
+    margin-right: 4px;
     cursor: pointer;
 }
 
@@ -156,25 +171,24 @@ body {
 .column__task-content {
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
-    width: 200px;
+    align-items: center;
+    width: 210px;
     min-height: 10px;
     margin-top: 10px;
-    background-color: #df1414;
+    background-color: #c330d6;
 }
-
 .task-content__textarea {
-    display: flex;
-    margin-top: 6px;
-    min-width: 200px;
-    min-height: 10px;
+    max-width: 210px;
+    min-width: 210px;
+    min-height: 40px;
+    max-height: 70px;
 }
-
 .task-content-title {
     display: flex;
+    margin: 8px;
     flex-direction: column;
     width: 200px;
-    margin-top: 12px;
+    /* margin-top: 12px; */
     background-color: white;
 }
 .task-content-title-display-none {
@@ -199,7 +213,8 @@ body {
     cursor: pointer;
     border-radius: 4px;
     margin-bottom: 4px;
-
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px;
 }
 
 .button-add-task:hover {
@@ -210,8 +225,6 @@ body {
     min-height: 100%;
     cursor: pointer;
 }
-
-
 
 .delete-task-button {
     background-image: url(../trello/pictures/delete-task-btn.png);
@@ -271,18 +284,28 @@ body {
 .modal-header {
     display: flex;
     flex-direction: row;
+    justify-content: space-around;
     margin: 20px;
     width: 800px;
-    height: 20px;
+    height: 40px;
 }
 
 .modal-title {
     width: 700px;
-    height: 40px;
-    margin-left: 6px;
+    min-height: 20px;
     font-size: 16px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.modal-task-title-text-area {
+    width: 700px;
+    min-height: 20px;
+    /* margin-left: 6px; */
+    font-size: 16px;
+    font-family: Arial, Helvetica, sans-serif;
     background-color: #e7e6e6;
     border: 1px solid black;
+    resize: none;
 }
 
 .modal-close-button {
@@ -291,8 +314,8 @@ body {
     border-radius: 50%;    
     cursor: pointer;
     background-color: #e7e6e6;
-    font-size: 14px;
-    margin-left: 20px;
+    font-size: 16px;
+    margin-right: 20px;
 }
 .modal-close-button:hover {
     background-color: #df1414;

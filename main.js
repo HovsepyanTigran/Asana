@@ -5,11 +5,11 @@ class Trello {
         this.render();
     }
 
-    drawColumn(title, id) {          
+    drawColumn(title, identificId) {          
         this.columnContent = document.createElement("div");
         this.columnContent.classList.add("column-content");
         this.addColumnButton.append(this.columnContent);
-        this.columnContent.id = id;
+        this.columnContent.identificId = identificId;
             
         this.content = document.createElement("div");
         this.content.classList.add("content");
@@ -22,7 +22,7 @@ class Trello {
         let columnTitle = document.createElement("input");
         columnTitle.classList.add("column-title");
         columnTitleContent.append(columnTitle);
-        columnTitle.id = id;
+        columnTitle.identificId = identificId;
         columnTitle.value = title
 
         columnTitle.onclick = (evt) => {
@@ -36,7 +36,7 @@ class Trello {
                 columnTitleContent.innerHTML = "";
                 columnTitleContent.append(columnTitle)
                 columnTitleContent.append(this.deleteColumnButton);
-                this.data.find(elem => elem.id === columnTitle.id).title = columnTitle.value
+                this.data.find(elem => elem.identificId === columnTitle.identificId).title = columnTitle.value
                 this.setLocalData();
             }
         })
@@ -44,19 +44,19 @@ class Trello {
         this.deleteColumnButton = document.createElement("button");
         this.deleteColumnButton.classList.add("column-delete-button");
         columnTitleContent.append(this.deleteColumnButton);
-        this.deleteColumnButton.id = id;
+        this.deleteColumnButton.identificId = identificId;
         
 
         this.taskContent = document.createElement("div");
         this.taskContent.classList.add("column__task-content");
         this.content.append(this.taskContent);
-        this.taskContent.id = id
+        this.taskContent.identificId = identificId
         
         this.container.querySelectorAll(".column-delete-button").forEach(item => {
             item.onclick = (evt) => {
                 evt.stopPropagation();
                 
-                let ind = this.data.findIndex(elem => elem.id === item.id)
+                let ind = this.data.findIndex(elem => elem.identificId === item.identificId)
 
                 this.data.splice(ind,1);
                 this.containerBoard.innerHTML = "";
@@ -66,13 +66,13 @@ class Trello {
                     this.addColumnButton = document.createElement("div");
                     this.addColumnButton.classList.add("column");
                     this.containerBoard.append(this.addColumnButton);
-                    this.addColumnButton.id = elem.id
+                    this.addColumnButton.identificId = elem.identificId
                     
-                    this.drawColumn(elem.title, elem.id);
+                    this.drawColumn(elem.title, elem.identificId);
                     
                     this.drawtaskDescriptionContentLogo(elem)
 
-                    this.drawTaskContent(this.columnContent, elem.id);
+                    this.drawTaskContent(this.columnContent, elem.identificId);
                     this.dragDropTask();
 
                 })
@@ -82,18 +82,17 @@ class Trello {
             
         }) 
         this.dragDropColumns();
-
     }
 
     
-    drawTaskContent(cnt, id) {   
+    drawTaskContent(cnt, identificId) {   
         this.taskClmnCntsArr = [];
         let clmnCntArr = [... this.container.querySelectorAll(".column-content")]
         this.addTaskButton = document.createElement("button");
         this.addTaskButton.classList.add("button-add-task");
         this.addTaskButton.innerHTML = "+ add Task";
         cnt.append(this.addTaskButton);
-        this.addTaskButton.id = id;
+        this.addTaskButton.identificId = identificId;
         
         this.container.querySelectorAll(".column__task-content").forEach(taskCnt => {
             this.taskClmnCntsArr.push(taskCnt)
@@ -104,7 +103,7 @@ class Trello {
                     evt.stopPropagation();
                     item.remove();
 
-                    let ind = this.taskClmnCntsArr.findIndex(elem => elem.id === item.id)
+                    let ind = this.taskClmnCntsArr.findIndex(elem => elem.identificId === item.identificId)
 
                     let titleTextArea = document.createElement("textarea");
                     titleTextArea.classList.add("task-content__textarea");
@@ -115,40 +114,59 @@ class Trello {
                         evt.stopPropagation();
                     }
 
+                    titleTextArea.addEventListener('keypress', evt => {
+                        if(evt.shiftKey && evt.keyCode === 13) {
+                            let taskidentificId = 'identificId_' + Math.random(1, 1000);
+                        if(titleTextArea.value != "") {   
+                            evt.stopPropagation();
+                            clmnCntArr[ind].removeChild(titleTextArea);
+                            clmnCntArr[ind].removeChild(taskTitleControls);
+                            this.data[ind].tasks.push({title:titleTextArea.value, description:'', identificId: taskidentificId});
+
+                            this.setLocalData();
+
+                            this.drawTask(titleTextArea.value, this.taskClmnCntsArr[ind], this.taskClmnCntsArr[ind].identificId);
+                            this.dragDropTask()
+
+                            clmnCntArr[ind].append(item);
+                        }
+                        }
+                    })
+
                     let taskTitleControls = document.createElement("div");
                     taskTitleControls.classList.add("column__title-controls");
                     clmnCntArr[ind].append(taskTitleControls);
             
                     let addTaskTitle = document.createElement("button");
-                    addTaskTitle.classList.add("button-add-column__title");
+                    addTaskTitle.classList.add("button-add-title");
                     addTaskTitle.innerHTML = "Add task";
                     taskTitleControls.append(addTaskTitle);
             
                     let closeTaskButton = document.createElement("button");
-                    closeTaskButton.classList.add("column-close-button");
+                    closeTaskButton.classList.add("close-button");
                     closeTaskButton.innerHTML = "x";
                     taskTitleControls.append(closeTaskButton);
 
                     addTaskTitle.onclick = (evt) => {   
                         evt.preventDefault()
-                        let taskId = 'id_' + Math.random(1, 1000);
+                        let taskidentificId = 'identificId_' + Math.random(1, 1000);
                         if(titleTextArea.value != "") {   
                             evt.stopPropagation();
                             clmnCntArr[ind].removeChild(titleTextArea);
                             clmnCntArr[ind].removeChild(taskTitleControls);
-                            this.data[ind].tasks.push({title:titleTextArea.value, description:'', id: taskId});
-                                    
-                            this.setLocalData();
-                            this.dragDropTask();
+                            this.data[ind].tasks.push({title:titleTextArea.value, description:'', identificId: taskidentificId});
 
-                            this.drawTask(titleTextArea.value, this.taskClmnCntsArr[ind], this.taskClmnCntsArr[ind].id);
+                            this.setLocalData();
+
+                            this.drawTask(titleTextArea.value, this.taskClmnCntsArr[ind], this.taskClmnCntsArr[ind].identificId);
+                            this.dragDropTask()
 
                             clmnCntArr[ind].append(item);
                         }
                     }
 
                     closeTaskButton.onclick = (evt) => {  
-                         evt.stopPropagation()
+                        evt.stopPropagation()
                         clmnCntArr[ind].removeChild(titleTextArea);
                         clmnCntArr[ind].removeChild(taskTitleControls);
                         clmnCntArr[ind].append(item);
@@ -158,9 +176,10 @@ class Trello {
             })
 
         })
+        
     }
 
-    drawTask(taskDesctitle, content, id) {
+    drawTask(taskDesctitle, content, identificId) {
         this.delTaskBtnArr = [];
         let taskContentTitle = document.createElement("div");
         taskContentTitle.classList.add("task-content-title");
@@ -168,7 +187,8 @@ class Trello {
         taskContentTitle.onclick = (evt) => {
             evt.stopPropagation()
         }
-        taskContentTitle.id = id; 
+
+        taskContentTitle.identificId = identificId; 
         content.append(taskContentTitle);
                     
         let taskTitle = document.createElement("div");
@@ -183,30 +203,30 @@ class Trello {
         let deleteTaskButton = document.createElement("button");
         deleteTaskButton.classList.add("delete-task-button");
         taskTitle.appendChild(deleteTaskButton);
-        deleteTaskButton.id = id;
+        deleteTaskButton.identificId = identificId;
         
         this.taskDescriptionContentLogo = document.createElement("img");
         this.taskDescriptionContentLogo.classList.add("task-description-content-logo");
         taskContentTitle.append(this.taskDescriptionContentLogo);
-        
+
         this.container.querySelectorAll(".delete-task-button").forEach(item => {
             this.delTaskBtnArr.push(item);
                 item.onclick = (evt) => {
                     evt.stopPropagation();
                     
-                    let delTaskBtnFilterArr = this.delTaskBtnArr.filter(elem => elem.id === item.id);
-                    let ind = this.taskClmnCntsArr.findIndex(elem => elem.id === item.id);
+                    let delTaskBtnFilterArr = this.delTaskBtnArr.filter(elem => elem.identificId === item.identificId);
+                    let ind = this.taskClmnCntsArr.findIndex(elem => elem.identificId === item.identificId);
                     this.data[ind].tasks.splice(delTaskBtnFilterArr.indexOf(item),1);
                     
                     this.setLocalData();
                     this.containerBoard.innerHTML = "";
-
                     this.drawContent(this.data);
                     this.drawContainerBoard();
                 }
         });
 
-        this.drawModalWindow();             
+        this.drawModalWindow(); 
+          
     }
     
     drawModalWindow() {
@@ -220,9 +240,9 @@ class Trello {
             taskTitleArr.push(elem)
             elem.onclick = (evt) => {
                 evt.stopPropagation()
-                let taskTitleFilterArr = taskTitleArr.filter(item => item.id === elem.id); 
+                let taskTitleFilterArr = taskTitleArr.filter(item => item.identificId === elem.identificId); 
                 
-                let ind1 = this.taskClmnCntsArr.findIndex(item => item.id === elem.id);
+                let taskClmnCntInd = this.taskClmnCntsArr.findIndex(item => item.identificId === elem.identificId);
                 let ind = taskTitleFilterArr.indexOf(elem);
 
                 let taskContentOverlay = document.querySelector(".task-content__overlay-window");
@@ -237,12 +257,12 @@ class Trello {
                 let columnTitleInfo = document.createElement('span');
                 columnTitleInfo.classList.add("column-title-info")
                 taskContentModal.append(columnTitleInfo);
-                columnTitleInfo.innerHTML = `in column ${this.data[ind1].title}`;
+                columnTitleInfo.innerHTML = `in column ${this.data[taskClmnCntInd].title}`;
                 
                 let taskContentModalTitle = document.createElement('p');
                 taskContentModalTitle.classList.add("modal-title");
                 modalHeader.append(taskContentModalTitle)
-                taskContentModalTitle.innerHTML = this.data[ind1].tasks[ind].title
+                taskContentModalTitle.innerHTML = this.data[taskClmnCntInd].tasks[ind].title
                 
                 let taskContentModalTitleTextArea = document.createElement('textarea');
                 taskContentModalTitleTextArea.classList.add("modal-task-title-text-area");
@@ -256,7 +276,7 @@ class Trello {
                     modalHeader.removeChild(taskContentModalTitle)
                     modalHeader.append(taskContentModalTitleTextArea)
 
-                    taskContentModalTitleTextArea.value = this.data[ind1].tasks[ind].title
+                    taskContentModalTitleTextArea.value = this.data[taskClmnCntInd].tasks[ind].title
                     taskContentModalTitleTextArea.select()
 
                     modalHeader.append(modalCloseButton);
@@ -267,8 +287,8 @@ class Trello {
                             taskContentModalTitleTextArea.remove()
                             modalHeader.append(taskContentModalTitle)
                             modalHeader.append(modalCloseButton);
-                            this.data[ind1].tasks[ind].title = taskContentModalTitleTextArea.value
-                            taskContentModalTitle.innerHTML = this.data[ind1].tasks[ind].title
+                            this.data[taskClmnCntInd].tasks[ind].title = taskContentModalTitleTextArea.value
+                            taskContentModalTitle.innerHTML = this.data[taskClmnCntInd].tasks[ind].title
 
                             this.setLocalData();
                         }
@@ -305,7 +325,7 @@ class Trello {
                 modalDescriptionTextArea = document.createElement("textarea");
                 modalDescriptionTextArea.classList.add("modal-description-text-area");
                 
-                if(this.data[ind1].tasks[ind].description === "") {
+                if(this.data[taskClmnCntInd].tasks[ind].description === "") {
                     modalDescriptionTextArea.placeholder = "task description . . .";
                     modalDescriptionTextAreaContent.append(modalDescriptionTextArea);
                     
@@ -320,14 +340,14 @@ class Trello {
                             modalDescriptionContent.removeChild(modalDescriptionTextAreaContent);
                             modalDescriptionContent.append(modalDescription)
                             modalDescription.textContent = modalDescriptionTextArea.value;
-                            this.data[ind1].tasks[ind].description = modalDescription.textContent;
+                            this.data[taskClmnCntInd].tasks[ind].description = modalDescription.textContent;
                             this.setLocalData();
                         }
                         if(modalDescriptionTextArea.value === "") {
                             modalDescriptionContent.removeChild(modalDescriptionTextAreaContent);
                             modalDescriptionContent.append(modalDescription)
                             modalDescription.textContent = "task description . . .";
-                            this.data[ind1].tasks[ind].description = "";
+                            this.data[taskClmnCntInd].tasks[ind].description = "";
                             this.setLocalData();
                         }
                     }
@@ -335,32 +355,32 @@ class Trello {
                     modalDescription.onclick = () => {
                         modalDescriptionContent.removeChild(modalDescription);
                         modalDescriptionContent.append(modalDescriptionTextAreaContent);
-                        modalDescriptionTextArea.value = this.data[ind1].tasks[ind].description;
+                        modalDescriptionTextArea.value = this.data[taskClmnCntInd].tasks[ind].description;
                         modalDescriptionTextArea.select();
                         this.setLocalData();
                     }
 
                     closeDescriptionButton.onclick = () => {
-                        if(modalDescriptionTextArea.value === "" && this.data[ind1].tasks[ind].description != "") {
+                        if(modalDescriptionTextArea.value === "" && this.data[taskClmnCntInd].tasks[ind].description != "") {
                             modalDescriptionTextAreaContent.remove()
                             modalDescriptionContent.append(modalDescription);
-                            modalDescriptionTextArea.value = this.data[ind1].tasks[ind].description;
+                            modalDescriptionTextArea.value = this.data[taskClmnCntInd].tasks[ind].description;
                             this.setLocalData();
                         }
-                        if(modalDescriptionTextArea.value === "" && this.data[ind1].tasks[ind].description === "") {
+                        if(modalDescriptionTextArea.value === "" && this.data[taskClmnCntInd].tasks[ind].description === "") {
                             modalDescriptionTextAreaContent.remove()
                             modalDescriptionContent.append(modalDescription);
                             modalDescription.textContent = "task description . . .";
                             this.setLocalData();
                         }
-                        if(modalDescriptionTextArea.value != "" && this.data[ind1].tasks[ind].description != "") {
+                        if(modalDescriptionTextArea.value != "" && this.data[taskClmnCntInd].tasks[ind].description != "") {
                             modalDescriptionTextAreaContent.remove();
                             modalDescriptionContent.append(modalDescription);
                             modalDescription.textContent = modalDescription.textContent;
                             modalDescriptionTextArea.value = modalDescription.textContent;
                             this.setLocalData();
                         }
-                        if(modalDescriptionTextArea.value != "" && this.data[ind1].tasks[ind].description === "") {
+                        if(modalDescriptionTextArea.value != "" && this.data[taskClmnCntInd].tasks[ind].description === "") {
                             modalDescriptionTextAreaContent.remove();
                             modalDescriptionContent.append(modalDescription);
                             modalDescription.textContent = "task description . . .";
@@ -369,7 +389,7 @@ class Trello {
                     } 
                 }
                 
-                if(this.data[ind1].tasks[ind].description != "") {
+                if(this.data[taskClmnCntInd].tasks[ind].description != "") {
                     modalDescriptionContent.append(modalDescription)
                     modalDescription.onclick = () => { 
                         modalDescriptionContent.removeChild(modalDescription);
@@ -380,11 +400,11 @@ class Trello {
                         modalDescriptionControls.append(closeDescriptionButton);
                         modalDescriptionTextArea.placeholder = "task description . . .";
 
-                        modalDescriptionTextArea.value = this.data[ind1].tasks[ind].description;
+                        modalDescriptionTextArea.value = this.data[taskClmnCntInd].tasks[ind].description;
                         modalDescriptionTextArea.select();
                         this.setLocalData();
                     }
-                    modalDescription.textContent = this.data[ind1].tasks[ind].description
+                    modalDescription.textContent = this.data[taskClmnCntInd].tasks[ind].description
 
                     addDescriptionButton.onclick = () => {
                         if(modalDescriptionTextArea.value === "") {
@@ -392,38 +412,38 @@ class Trello {
                             modalDescriptionContent.append(modalDescription)
                             
                             modalDescription.textContent = "task description . . .";
-                            this.data[ind1].tasks[ind].description = "";
+                            this.data[taskClmnCntInd].tasks[ind].description = "";
                             this.setLocalData();
                         } else {
                             modalDescriptionContent.removeChild(modalDescriptionTextAreaContent)
                             modalDescriptionContent.append(modalDescription);
                             modalDescription.textContent = modalDescriptionTextArea.value;
-                            this.data[ind1].tasks[ind].description = modalDescription.textContent
+                            this.data[taskClmnCntInd].tasks[ind].description = modalDescription.textContent
                             this.setLocalData();
                         }
                     }
 
                     closeDescriptionButton.onclick = () => {
-                        if(modalDescriptionTextArea.value === "" && this.data[ind1].tasks[ind].description != "") {
+                        if(modalDescriptionTextArea.value === "" && this.data[taskClmnCntInd].tasks[ind].description != "") {
                             modalDescriptionTextAreaContent.remove()
                             modalDescriptionContent.append(modalDescription);
-                            modalDescriptionTextArea.value = this.data[ind1].tasks[ind].description;
+                            modalDescriptionTextArea.value = this.data[taskClmnCntInd].tasks[ind].description;
                             this.setLocalData();
                         }
-                        if(modalDescriptionTextArea.value === "" && this.data[ind1].tasks[ind].description === "") {
+                        if(modalDescriptionTextArea.value === "" && this.data[taskClmnCntInd].tasks[ind].description === "") {
                             modalDescriptionTextAreaContent.remove()
                             modalDescriptionContent.append(modalDescription);
                             modalDescription.textContent = "task description . . .";
                             this.setLocalData();
                         }
-                        if(modalDescriptionTextArea.value != "" && this.data[ind1].tasks[ind].description != "") {
+                        if(modalDescriptionTextArea.value != "" && this.data[taskClmnCntInd].tasks[ind].description != "") {
                             modalDescriptionContent.removeChild(modalDescriptionTextAreaContent);
                             modalDescriptionContent.append(modalDescription);
                             modalDescription.textContent = modalDescription.textContent;
                             modalDescriptionTextArea.value = modalDescription.textContent;
                             this.setLocalData();
                         }
-                        if(modalDescriptionTextArea.value != "" && this.data[ind1].tasks[ind].description === "") {
+                        if(modalDescriptionTextArea.value != "" && this.data[taskClmnCntInd].tasks[ind].description === "") {
                             modalDescriptionTextAreaContent.remove();
                             modalDescriptionContent.append(modalDescription);
                             modalDescription.textContent = "task description . . .";
@@ -444,10 +464,8 @@ class Trello {
                     this.drawContent(this.data);
                     this.drawContainerBoard();
                 } 
-                
             }
-           
-        })
+         })
     }
 
     drawContainerBoard() {
@@ -459,72 +477,70 @@ class Trello {
         this.buttonClicked = true;
         this.xCoordinatesArr = [];
   
-        this.addColumnButton.onclick = (evt) => {
-            evt.stopPropagation();
-
-            if(this.buttonClicked === true) {
+        this.container.querySelectorAll(".column").forEach(button => {
+            button.onclick = (evt) => {
                 evt.stopPropagation();
-                this.addColumnButton.innerHTML = "";
-                this.addColumnButton.classList.remove("button-add-column");
-                evt.stopPropagation();
-
-                let titleInput = document.createElement("input");
-                titleInput.classList.add("title-input");
-                this.addColumnButton.append(titleInput);
-                titleInput.placeholder = "Enter column title";
-
-                titleInput.onclick = (evt) => {
+                if(button.buttonClicked != true && button.innerHTML === "+ add column") {
                     evt.stopPropagation();
-                }
-
-                let columnTitleControls = document.createElement("div");
-                columnTitleControls.classList.add("column__title-controls");
-                this.addColumnButton.append(columnTitleControls);
-
-                let addColumnTitle = document.createElement("button");
-                addColumnTitle.classList.add("button-add-column__title");
-                addColumnTitle.innerHTML = "Add column";
-                columnTitleControls.append(addColumnTitle);
-                
-                addColumnTitle.onclick = (evt) => {
+                    button.innerHTML = "";
+                    button.classList.remove("button-add-column");
                     evt.stopPropagation();
-                    if(titleInput.value != "") {   
-                        let id = 'id_' + Math.random(1, 1000);
-
-                        this.addColumnButton.id = id;
-                        this.column = {};
-                        this.column.id = id;
-                        this.addColumnButton.innerHTML = "";
-                        this.column.title = titleInput.value;
-                        this.column.tasks = [];
-                        this.data.push(this.column);
-                        this.addColumnButton.innerHTML = "";
-                        this.setLocalData();
-                        
-                        this.drawColumn(this.column.title, this.column.id);
-                        this.drawTaskContent(this.columnContent, id);
-                        this.drawContainerBoard();
-                        this.dragDropTask();
+    
+                    let titleInput = document.createElement("input");
+                    titleInput.classList.add("title-input");
+                    button.append(titleInput);
+                    titleInput.placeholder = "Enter column title";
+    
+                    titleInput.onclick = (evt) => {
+                        evt.stopPropagation();
                     }
+    
+                    let columnTitleControls = document.createElement("div");
+                    columnTitleControls.classList.add("column__title-controls");
+                    button.append(columnTitleControls);
+    
+                    let addColumnTitle = document.createElement("button");
+                    addColumnTitle.classList.add("button-add-title");
+                    addColumnTitle.innerHTML = "Add column";
+                    columnTitleControls.append(addColumnTitle);
+                    
+                    addColumnTitle.onclick = (evt) => {
+                        evt.stopPropagation();
+                        if(titleInput.value != "") {   
+                            let identificId = 'identificId_' + Math.random(1, 1000);
+    
+                            button.identificId = identificId;
+                            this.column = {};
+                            this.column.identificId = identificId;
+                            button.innerHTML = "";
+                            this.column.title = titleInput.value;
+                            this.column.tasks = [];
+                            this.data.push(this.column);
+                            button.innerHTML = "";
+                            this.setLocalData();
+                            
+                            this.drawColumn(this.column.title, this.column.identificId);
+                            this.drawTaskContent(this.columnContent, identificId);
+                            this.drawContainerBoard();
+                            this.dragDropTask();
+                        }
+                    }
+    
+                    let closeColumnButton = document.createElement("button");
+                    closeColumnButton.classList.add("close-button");
+                    closeColumnButton.innerHTML = "x";
+                    columnTitleControls.append(closeColumnButton);
+    
+                    closeColumnButton.onclick = (evt) => {
+                        evt.stopPropagation();
+                        this.addColumnButton.classList.add("button-add-column");
+                        button.innerHTML = "+ add column";
+                        this.buttonClicked = true;
+                    }
+                    this.buttonClicked = false;
                 }
-
-                let closeColumnButton = document.createElement("button");
-                closeColumnButton.classList.add("column-close-button");
-                closeColumnButton.innerHTML = "x";
-                columnTitleControls.append(closeColumnButton);
-
-                closeColumnButton.onclick = (evt) => {
-                    evt.stopPropagation();
-                    this.addColumnButton.classList.add("button-add-column");
-                    this.addColumnButton.innerHTML = "+ add column";
-                    this.buttonClicked = true;
-                }
-                this.buttonClicked = false;
             }
-            
-        }
-
-   
+        })
     }
 
     render() 
@@ -540,38 +556,38 @@ class Trello {
 
         this.drawContainerBoard();
         this?.data?.forEach((el) => {
-            let id = el.id; 
+            let identificId = el.identificId; 
             this.addColumnButton.innerHTML = "";
             this.addColumnButton.classList.remove("button-add-column");
-            this.addColumnButton.id = id;
+            this.addColumnButton.identificId = identificId;
             
-            this.drawColumn(el.title, id);
+            this.drawColumn(el.title, identificId);
             this.drawtaskDescriptionContentLogo(el);
-            this.drawTaskContent(this.columnContent, id);
+            this.drawTaskContent(this.columnContent, identificId);
             this.drawContainerBoard();
-            this.dragDropTask();
         })
+        this.dragDropTask();
     }
     
     
     drawContent(data) {
         data?.forEach((el) => {
-            let id = el.id; 
+            let identificId = el.identificId; 
             this.addColumnButton = document.createElement("div");
             this.addColumnButton.classList.add("column");
-            this.addColumnButton.id = el.id;
+            this.addColumnButton.identificId = el.identificId;
             this.containerBoard.append(this.addColumnButton);
             
-            this.drawColumn(el.title, id);
+            this.drawColumn(el.title, identificId);
             this.drawtaskDescriptionContentLogo(el);
-            this.drawTaskContent(this.columnContent, id);
-            this.dragDropTask()
+            this.drawTaskContent(this.columnContent, identificId);
         })
+        this.dragDropTask()
     }
     
     drawtaskDescriptionContentLogo(elem) {
         elem.tasks.forEach((task) => {
-            this.drawTask(task.title, this.taskContent, this.taskContent.id);
+            this.drawTask(task.title, this.taskContent, this.taskContent.identificId);
             if(task.description === "") {
                 this.taskDescriptionContentLogo.classList.remove("task-description-content-logo_display-block");
                 this.taskDescriptionContentLogo.classList.add("task-description-content-logo");
@@ -583,7 +599,7 @@ class Trello {
     }
     
     dragDropTask() { 
-        var taskTitleArr = [];
+        var taskTitleArr = [...this.container.querySelectorAll(".task-content-title")];
         var taskTitleFilterArr
         this.draggedItem = null;
         let self = this;
@@ -593,9 +609,8 @@ class Trello {
         this.mouseYPosition;
         this.ind;
         this.task;
-        
+
         this.container.querySelectorAll(".task-content-title").forEach(item => {
-            taskTitleArr.push(item)
             
             if(item.getAttribute('dragActivated') == 'true') return;
             item.setAttribute('dragActivated', 'true');
@@ -607,10 +622,10 @@ class Trello {
                 if(this.draggedItem) this.draggedItem.drop = false;
                 this.mouseYPosition = evt.clientY;
 
-                taskTitleFilterArr = taskTitleArr.filter(elem => elem.id === this.draggedItem.id);
+                taskTitleFilterArr = taskTitleArr.filter(elem => elem.identificId === this.draggedItem.identificId);
                 this.ind = taskTitleFilterArr.indexOf(this.draggedItem);
-                this.task = this.data.find(elem => elem.id === this.draggedItem.id).tasks[this.ind];
-                this.data.find(elem => elem.id === this.draggedItem.id).tasks.splice(this.ind,1);
+                this.task = this.data.find(elem => elem.identificId === this.draggedItem.identificId).tasks[this.ind];
+                this.data.find(elem => elem.identificId === this.draggedItem.identificId).tasks.splice(this.ind,1);
 
                 taskTitleFilterArr.forEach(item => {
                     self.taskYCoordinatesArr.push(item.getBoundingClientRect().y);
@@ -626,14 +641,14 @@ class Trello {
                 },0);
 
             });
-            item.addEventListener("dragleave", (evt) => {})
+
             item.addEventListener('dragend', (evt) => {
                 if(this.draggedItem != null && this.draggedItem.drop === false) {
                     evt.preventDefault();
                     evt.stopPropagation();
                     this.draggedItem.classList.remove("task-content-title-display-none");
                     this.draggedItem.classList.add("task-content-title");
-                    this.data.find(elem => elem.id === this.draggedItem.id).tasks.splice(this.ind,0,this.task);
+                    this.data.find(elem => elem.identificId === this.draggedItem.identificId).tasks.splice(this.ind,0,this.task);
                     self.columnsXCoordinatesArr.splice(this.ind, 0, this.yCoordinate)
                     this.setLocalData();
                 }
@@ -641,10 +656,11 @@ class Trello {
 
             
         })
-        
+
         this.container.querySelectorAll(".column__task-content").forEach(cnt => {
 
             if(cnt.getAttribute('dragActivated') == 'true') return;
+            
             cnt.setAttribute('dragActivated', 'true');
 
             cnt.addEventListener('dragover', evt => {
@@ -656,7 +672,9 @@ class Trello {
                 evt.stopPropagation();
                 if(cnt.childNodes.length != 0) {
                     if(this.draggedItem != null) {
-                        taskTitleFilterArr = taskTitleArr.filter(item => item.id === cnt.id)
+                        taskTitleArr = [...this.container.querySelectorAll(".task-content-title")];
+                        let a = this.data.find(item => item.identificId === cnt.identificId)
+                        taskTitleFilterArr = taskTitleArr.filter(item => item.identificId === a.identificId)
                         self.taskYCoordinatesArr = []
                         taskTitleFilterArr.forEach(item => {
                             self.taskYCoordinatesArr.push(item.getBoundingClientRect().y)
@@ -666,41 +684,46 @@ class Trello {
                         var closest = self.taskYCoordinatesArr.reduce(function(prev, curr) {
                             return (Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
                         });
+
                         this.ind = self.taskYCoordinatesArr.indexOf(closest)
-                        if(this.draggedItem.id != cnt.id) {
+                        if(this.draggedItem.identificId != cnt.identificId) {
                             if(goal < closest) {
-                                this.data.find(elem => elem.id === cnt.id).tasks.splice(this.ind, 0, this.task);
+                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind, 0, this.task);
                                 this.setLocalData()
                             }
                             else if(goal > closest) {
-                                this.data.find(elem => elem.id === cnt.id).tasks.splice(this.ind+1, 0, this.task);
+                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind+1, 0, this.task);
                                 this.setLocalData()
                             }
                         } 
-                        else if(this.draggedItem.id == cnt.id) {
+
+                        else if(this.draggedItem.identificId == cnt.identificId) {
                             if(goal < closest && goal > this.mouseYPosition) {
-                                this.data.find(elem => elem.id === cnt.id).tasks.splice(this.ind-1, 0, this.task);
+                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind-1, 0, this.task);
                                 this.setLocalData()
                             }
                             else if(goal < closest && goal < this.mouseYPosition) {
-                                this.data.find(elem => elem.id === cnt.id).tasks.splice(this.ind, 0, this.task);
+                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind, 0, this.task);
                                 this.setLocalData()
                             }
                             else if(goal > closest && goal > this.mouseYPosition) {
-                                this.data.find(elem => elem.id === cnt.id).tasks.splice(this.ind, 0, this.task);
+                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind, 0, this.task);
                                 this.setLocalData()
                             }
                         }
+                        
                         this.draggedItem.drop = true
 
-                        this.container.innerHTML = "";
+                        this.containerBoard.innerHTML = "";
+                        this.setLocalData();
 
-                        this.render();
+                        this.drawContent(this.data);
+                        this.drawContainerBoard();
                     }
                 }
                 else {
                     if(this.draggedItem != null) {
-                    this.data.find(elem => elem.id === cnt.id).tasks.splice(0, 0, this.task);
+                    this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(0, 0, this.task);
                     this.setLocalData();
                     
                     this.draggedItem.drop = true
@@ -739,7 +762,7 @@ class Trello {
                 draggedItem = item;
 
                 if(draggedItem != null) draggedItem.drop = false;
-                ind = this.data.findIndex(elem => elem.id === draggedItem.id);
+                ind = this.data.findIndex(elem => elem.identificId === draggedItem.identificId);
                 clmn = this.data[ind];
                 this.data.splice(ind,1);
                 xCoordinate = self.columnsXCoordinatesArr[ind];
@@ -785,6 +808,7 @@ class Trello {
 
                     this.container.innerHTML = "";
                     this.render()
+                    
                 }
             })
             

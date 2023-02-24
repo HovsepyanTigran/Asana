@@ -112,6 +112,7 @@ class Trello {
                     
                     titleTextArea.onclick = (evt) => {
                         evt.stopPropagation();
+                        evt.preventDefault();
                     }
 
                     titleTextArea.addEventListener('keypress', evt => {
@@ -276,7 +277,7 @@ class Trello {
                     modalHeader.removeChild(taskContentModalTitle)
                     modalHeader.append(taskContentModalTitleTextArea)
 
-                    taskContentModalTitleTextArea.value = this.data[taskClmnCntInd].tasks[ind].title
+                    taskContentModalTitleTextArea.value = this.data[taskClmnCntInd].tasks?.[ind]?.title
                     taskContentModalTitleTextArea.select()
 
                     modalHeader.append(modalCloseButton);
@@ -514,6 +515,7 @@ class Trello {
                             this.column.identificId = identificId;
                             button.innerHTML = "";
                             this.column.title = titleInput.value;
+                            this.column.draggable = "deactivate"
                             this.column.tasks = [];
                             this.data.push(this.column);
                             button.innerHTML = "";
@@ -601,13 +603,13 @@ class Trello {
     dragDropTask() { 
         var taskTitleArr = [...this.container.querySelectorAll(".task-content-title")];
         var taskTitleFilterArr
-        this.draggedItem = null;
+        this.taskDraggedItem = null;
         let self = this;
         self.taskYCoordinatesArr = [];
         self.taskYCoordinatesFilterArr = []
         this.yCoordinate;
         this.mouseYPosition;
-        this.ind;
+        this.taskInd;
         this.task;
 
         this.container.querySelectorAll(".task-content-title").forEach(item => {
@@ -618,43 +620,40 @@ class Trello {
             
             item.addEventListener('dragstart', (evt) => {
                 evt.stopPropagation();
-                this.draggedItem = item;
-                if(this.draggedItem) this.draggedItem.drop = false;
+                this.taskDraggedItem = item;
+                if(this.taskDraggedItem) this.taskDraggedItem.drop = false;
                 this.mouseYPosition = evt.clientY;
 
-                taskTitleFilterArr = taskTitleArr.filter(elem => elem.identificId === this.draggedItem.identificId);
-                this.ind = taskTitleFilterArr.indexOf(this.draggedItem);
-                this.task = this.data.find(elem => elem.identificId === this.draggedItem.identificId).tasks[this.ind];
-                this.data.find(elem => elem.identificId === this.draggedItem.identificId).tasks.splice(this.ind,1);
-
+                taskTitleFilterArr = taskTitleArr.filter(elem => elem.identificId === this.taskDraggedItem.identificId);
+                this.taskInd = taskTitleFilterArr.indexOf(this.taskDraggedItem);
+                this.task = this.data.find(elem => elem.identificId === this.taskDraggedItem.identificId).tasks[this.taskInd];
+                this.data.find(elem => elem.identificId === this.taskDraggedItem.identificId).tasks.splice(this.taskInd,1);
+                
                 taskTitleFilterArr.forEach(item => {
                     self.taskYCoordinatesArr.push(item.getBoundingClientRect().y);
                 })
 
-                this.yCoordinate = self.taskYCoordinatesArr[this.ind];
-                self.taskYCoordinatesArr.splice(this.ind,1);
+                this.yCoordinate = self.taskYCoordinatesArr[this.taskInd];
+                self.taskYCoordinatesArr.splice(this.taskInd,1);
                 this.setLocalData();
 
                 setTimeout(() => {
-                    this.draggedItem.classList.remove("task-content-title");
-                    this.draggedItem.classList.add("task-content-title-display-none");
+                    this.taskDraggedItem.classList.add("task-content-title-display-none");
                 },0);
 
             });
 
             item.addEventListener('dragend', (evt) => {
-                if(this.draggedItem != null && this.draggedItem.drop === false) {
+                if(this.taskDraggedItem != null && this.taskDraggedItem.drop === false) {
                     evt.preventDefault();
                     evt.stopPropagation();
-                    this.draggedItem.classList.remove("task-content-title-display-none");
-                    this.draggedItem.classList.add("task-content-title");
-                    this.data.find(elem => elem.identificId === this.draggedItem.identificId).tasks.splice(this.ind,0,this.task);
-                    self.columnsXCoordinatesArr.splice(this.ind, 0, this.yCoordinate)
+                    this.taskDraggedItem.classList.remove("task-content-title-display-none");
+                    this.taskDraggedItem.classList.add("task-content-title");
+                    this.data.find(elem => elem.identificId === this.taskDraggedItem.identificId).tasks.splice(this.taskInd,0,this.task);
+                    self.columnsXCoordinatesArr.splice(this.taskInd, 0, this.yCoordinate)
                     this.setLocalData();
                 }
             })
-
-            
         })
 
         this.container.querySelectorAll(".column__task-content").forEach(cnt => {
@@ -666,16 +665,17 @@ class Trello {
             cnt.addEventListener('dragover', evt => {
                 evt.preventDefault()
             })
-
             cnt.addEventListener('drop', evt => {
                 evt.preventDefault();
                 evt.stopPropagation();
+                let self = this
                 if(cnt.childNodes.length != 0) {
-                    if(this.draggedItem != null) {
-                        taskTitleArr = [...this.container.querySelectorAll(".task-content-title")];
-                        let a = this.data.find(item => item.identificId === cnt.identificId)
-                        taskTitleFilterArr = taskTitleArr.filter(item => item.identificId === a.identificId)
+                    if(this.taskDraggedItem != null) {
+                        if(this.taskDraggedItem.classList.contains("task-content-title-display-none") === true) {
+                        taskTitleFilterArr = [...cnt.querySelectorAll(".task-content-title")];
+                        console.log(cnt);
                         self.taskYCoordinatesArr = []
+                        console.log(taskTitleFilterArr);
                         taskTitleFilterArr.forEach(item => {
                             self.taskYCoordinatesArr.push(item.getBoundingClientRect().y)
                         })
@@ -686,53 +686,48 @@ class Trello {
                         });
 
                         this.ind = self.taskYCoordinatesArr.indexOf(closest)
-                        if(this.draggedItem.identificId != cnt.identificId) {
-                            if(goal < closest) {
-                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind, 0, this.task);
-                                this.setLocalData()
-                            }
-                            else if(goal > closest) {
-                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind+1, 0, this.task);
+                        let index = this.ind
+                        if(this.taskDraggedItem.identificId != cnt.identificId) {
+                            
+                            if(goal > closest) {
+                                index = index + 1
                                 this.setLocalData()
                             }
                         } 
 
-                        else if(this.draggedItem.identificId == cnt.identificId) {
+                        else if(this.taskDraggedItem.identificId == cnt.identificId) {
                             if(goal < closest && goal > this.mouseYPosition) {
-                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind-1, 0, this.task);
-                                this.setLocalData()
-                            }
-                            else if(goal < closest && goal < this.mouseYPosition) {
-                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind, 0, this.task);
-                                this.setLocalData()
-                            }
-                            else if(goal > closest && goal > this.mouseYPosition) {
-                                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(this.ind, 0, this.task);
-                                this.setLocalData()
+                                index = index-1
                             }
                         }
-                        
-                        this.draggedItem.drop = true
+                        this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(index, 0, this.task);
+                        this.setLocalData()
+                        this.taskDraggedItem.drop = true
 
                         this.containerBoard.innerHTML = "";
                         this.setLocalData();
 
                         this.drawContent(this.data);
                         this.drawContainerBoard();
+                    } else {
+                        this.data.splice(self.clmInd,0,self.clmn);
+                        self.columnsXCoordinatesArr.splice(self.clmInd, 0, self.clmnXCoordinate)
+                        this.setLocalData();
                     }
                 }
-                else {
-                    if(this.draggedItem != null) {
-                    this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(0, 0, this.task);
-                    this.setLocalData();
-                    
-                    this.draggedItem.drop = true
+            } 
+            else {
+                if(this.taskDraggedItem != null) {
+                this.data.find(elem => elem.identificId === cnt.identificId).tasks.splice(0, 0, this.task);
+                this.setLocalData();
+                
+                this.taskDraggedItem.drop = true
 
-                    this.container.innerHTML = "";
+                this.container.innerHTML = "";
 
-                    this.render();
-                    }
+                this.render();
                 }
+            }
             })
         })        
     }
@@ -767,8 +762,10 @@ class Trello {
                 this.data.splice(ind,1);
                 xCoordinate = self.columnsXCoordinatesArr[ind];
                 self.columnsXCoordinatesArr.splice(ind, 1);
+                self.clmnXCoordinate = self.columnsXCoordinatesArr[ind]
+                self.clmInd = ind 
+                self.clmn = clmn
                 this.setLocalData();
-
 
                 setTimeout(() => {
                     draggedItem.classList.remove("column");
@@ -779,37 +776,28 @@ class Trello {
             this.containerBoard.addEventListener("dragover", (evt) => {
                 evt.preventDefault();
             })
-
             this.containerBoard.addEventListener('drop', (evt) => {
                 evt.preventDefault()
                 evt.stopPropagation();
-
-                if(draggedItem != null && item.classList.contains('button-add-column') === false) {
+                    if(draggedItem != null && draggedItem.classList.contains("column-display-none") === true) {
                     let goal = evt.clientX;
                     var closest = self.columnsXCoordinatesArr.reduce(function(prev, curr) {
                         return (Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev);
                     });
 
                     draggedItem.drop = true;
-
-                    if(goal < closest && goal > mouseXPosition) {
-                        this.data.splice(self.columnsXCoordinatesArr.indexOf(closest)+1, 0, clmn);
-                        this.setLocalData();
-                    } else if(goal < closest && goal < mouseXPosition) {
-                        this.data.splice(self.columnsXCoordinatesArr.indexOf(closest), 0, clmn);
-                        this.setLocalData();
-                    } else if(goal > closest && goal < mouseXPosition) {
-                        this.data.splice(self.columnsXCoordinatesArr.indexOf(closest), 0, clmn);
-                        this.setLocalData();
-                    } else if(goal > closest && goal > mouseXPosition) {
-                        this.data.splice(self.columnsXCoordinatesArr.indexOf(closest)+1, 0, clmn);
-                        this.setLocalData();
+                    let index = self.columnsXCoordinatesArr.indexOf(closest)
+                    if(goal <= closest && goal >= mouseXPosition) {
+                        index = index + 1
+                    } 
+                     else if(goal >= closest && goal >= mouseXPosition) {
+                        index = index + 1
                     }
-
+                    this.data.splice(index, 0, clmn);
+                    this.setLocalData()
                     this.container.innerHTML = "";
                     this.render()
-                    
-                }
+                }            
             })
             
                 item.addEventListener('dragend', (evt) => {
